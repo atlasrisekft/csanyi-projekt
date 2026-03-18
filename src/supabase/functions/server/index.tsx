@@ -411,7 +411,7 @@ app.post("/make-server-5be515e6/report-audio", async (c) => {
 // PUBLIC ACCESS (Shared Projects)
 // ---------------------------------------------------------------------------
 
-app.post("/make-server-5be515e6/share", async (c) => {
+app.post("/share", async (c) => {
   try {
     const { user, response } = await requireUser(c);
     if (!user) return response;
@@ -443,7 +443,7 @@ app.post("/make-server-5be515e6/share", async (c) => {
   }
 });
 
-app.get("/make-server-5be515e6/share/resolve", async (c) => {
+app.get("/share/resolve", async (c) => {
   try {
     const shortId = c.req.query("id");
     if (!shortId) {
@@ -472,7 +472,7 @@ app.get("/make-server-5be515e6/share/resolve", async (c) => {
   }
 });
 
-app.get("/make-server-5be515e6/public/project", async (c) => {
+app.get("/public/project", async (c) => {
   try {
     const shortId = c.req.query("id");
     if (!shortId) {
