@@ -57,6 +57,7 @@
       outDir: 'build',
     },
     server: {
+      historyApiFallback: true,
       port: 3000,
       open: true,
     },

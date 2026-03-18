@@ -421,14 +421,20 @@ app.post("/make-server-5be515e6/share", async (c) => {
       return c.json({ error: "Missing projectId" }, 400);
     }
 
-    const shortId = Math.random().toString(36).substring(2, 8);
+    const shortId = crypto.randomUUID().slice(0, 10);
     const key = `share_${shortId}`;
     const supabase = getSupabaseAdmin();
 
-    await supabase.from("project_shares").insert({
-      short_id: shortId,
-      project_id,
-    });
+    const { data: existing } = await supabase
+      .from("project_shares")
+      .select("short_id")
+      .eq("project_id", projectId)
+      .eq("is_active", true)
+      .single();
+
+    if (existing) {
+      return c.json({ shortId: existing.short_id });
+    }
 
     return c.json({ shortId });
   } catch (err) {
@@ -450,6 +456,7 @@ app.get("/make-server-5be515e6/share/resolve", async (c) => {
       .from("project_shares")
       .select("project_id")
       .eq("short_id", shortId)
+      .eq("is_active", true)
       .single();
 
     if (error || !data) {
@@ -479,6 +486,7 @@ app.get("/make-server-5be515e6/public/project", async (c) => {
       .from("project_shares")
       .select("project_id")
       .eq("short_id", shortId)
+      .eq("is_active", true)
       .single();
 
     if (shareError || !share) {
@@ -514,14 +522,14 @@ app.get("/make-server-5be515e6/public/project", async (c) => {
       (p.hotspots || []).map(async (h: any) => {
         if (h.audioPath) h.audioUrl = await sign(h.audioPath);
         return h;
-      })
+      }),
     );
 
     p.globalChannels = await Promise.all(
       (p.globalChannels || []).map(async (c: any) => {
         if (c.audioPath) c.audioUrl = await sign(c.audioPath);
         return c;
-      })
+      }),
     );
 
     return c.json({ project: p });
@@ -530,6 +538,5 @@ app.get("/make-server-5be515e6/public/project", async (c) => {
     return c.json({ error: "Internal server error" }, 500);
   }
 });
-
 
 Deno.serve(app.fetch);
