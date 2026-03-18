@@ -487,10 +487,16 @@ const ShareDialogContent = ({
     import("../utils/api").then(({ createShareLink }) => {
       createShareLink(session?.access_token, project.id)
         .then((data: any) => {
+          console.log("share link response:", data);
+          if (!data?.shortId) {
+            throw new Error("No shortId returned");
+          }
           setLink(`${window.location.origin}/s/${data.shortId}`);
         })
-        .catch((err) => console.error("Error creating share link:", err))
-        .finally(() => setIsLoading(false));
+        .catch((err) => {
+          console.error("Error creating share link:", err);
+          setIsLoading(false);
+        });
     });
   }, [session?.access_token, project.id]);
 

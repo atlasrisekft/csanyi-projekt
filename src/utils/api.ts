@@ -114,13 +114,25 @@ export const loadProjects = async (token: string) => {
 };
 
 export const getSharedProject = async (shortId: string) => {
-    const res = await fetch(`${BASE_URL}/public/project?id=${shortId}`, {
-        headers: {
-             'Authorization': `Bearer ${publicAnonKey}`
+    // 1. resolve shortId → userId + projectId
+    const resolveRes = await fetch(`${BASE_URL}/share/resolve?id=${shortId}`);
+    if (!resolveRes.ok) throw new Error("Invalid share link");
+
+    const { userId, projectId } = await resolveRes.json();
+
+    // 2. fetch actual project
+    const projectRes = await fetch(
+        `${BASE_URL}/public/project?userId=${userId}&projectId=${projectId}`,
+        {
+            headers: {
+                Authorization: `Bearer ${publicAnonKey}`
+            }
         }
-    });
-    if (!res.ok) throw new Error("Failed to load shared project");
-    const { project } = await res.json();
+    );
+
+    if (!projectRes.ok) throw new Error("Failed to load project");
+
+    const { project } = await projectRes.json();
     return project;
 };
 
