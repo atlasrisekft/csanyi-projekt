@@ -1,7 +1,7 @@
 import { Hono } from "npm:hono";
 import { cors } from "npm:hono/cors";
 import { logger } from "npm:hono/logger";
-import { createClient } from "@supabase/supabase-js";
+import { createClient } from "npm:@supabase/supabase-js@2";
 import { requireUser } from "./auth.ts";
 
 const app = new Hono();
@@ -16,10 +16,11 @@ const allowedOrigins = ["http://localhost:3000", "https://yourdomain.com"];
 app.use(
   "/*",
   cors({
-  origin: "*",
-  allowHeaders: ["Content-Type", "Authorization"],
-  allowMethods: ["GET", "POST"],
-}),
+    origin: (origin) => (allowedOrigins.includes(origin ?? "") ? origin : ""),
+    allowHeaders: ["Content-Type", "Authorization"],
+    allowMethods: ["GET", "POST"],
+    maxAge: 600,
+  }),
 );
 
 // CONSTANTS
@@ -34,7 +35,7 @@ const getSupabaseAdmin = () => {
 };
 
 // Initialize Bucket
-app.get("/init", async (c) => {
+app.get("/make-server-5be515e6/init", async (c) => {
   const supabase = getSupabaseAdmin();
   const { data: buckets } = await supabase.storage.listBuckets();
   const bucketExists = buckets?.some((bucket) => bucket.name === BUCKET_NAME);
@@ -48,7 +49,7 @@ app.get("/init", async (c) => {
 });
 
 // Health check endpoint
-app.get("/health", (c) => {
+app.get("/make-server-5be515e6/health", (c) => {
   return c.json({ status: "ok" });
 });
 
@@ -58,7 +59,7 @@ app.get("/health", (c) => {
 // ASSET MANAGEMENT (Storage)
 // ---------------------------------------------------------------------------
 
-app.post("/storage/upload-url", async (c) => {
+app.post("/make-server-5be515e6/storage/upload-url", async (c) => {
   try {
     const { user, response } = await requireUser(c);
     if (!user) return response;
@@ -93,7 +94,7 @@ app.post("/storage/upload-url", async (c) => {
   }
 });
 
-app.post("/storage/get-url", async (c) => {
+app.post("/make-server-5be515e6/storage/get-url", async (c) => {
   try {
     const { user, response } = await requireUser(c);
     if (!user) return response;
@@ -128,7 +129,7 @@ app.post("/storage/get-url", async (c) => {
 // DATA PERSISTENCE (KV Store)
 // ---------------------------------------------------------------------------
 
-app.get("/projects", async (c) => {
+app.get("/make-server-5be515e6/projects", async (c) => {
   const { user, response } = await requireUser(c);
   if (!user) return response;
 
@@ -148,7 +149,7 @@ app.get("/projects", async (c) => {
   });
 });
 
-app.post("/projects", async (c) => {
+app.post("/make-server-5be515e6/projects", async (c) => {
   const { user, response } = await requireUser(c);
   if (!user) return response;
 
@@ -167,7 +168,7 @@ app.post("/projects", async (c) => {
 });
 
 // Signup Route (Auto-confirm email)
-app.post("/signup", async (c) => {
+app.post("/make-server-5be515e6/signup", async (c) => {
   try {
     const { email, password, name } = await c.req.json();
 
@@ -197,7 +198,7 @@ app.post("/signup", async (c) => {
 });
 
 // Invite Route (admin only)
-app.post("/invite", async (c) => {
+app.post("/make-server-5be515e6/invite", async (c) => {
   try {
     // 1️⃣ Centralized auth
     const { user, response } = await requireUser(c);
@@ -236,7 +237,7 @@ app.post("/invite", async (c) => {
 // USER PREFERENCES
 // ---------------------------------------------------------------------------
 
-app.get("/user/preferences", async (c) => {
+app.get("/make-server-5be515e6/user/preferences", async (c) => {
   try {
     const { user, response } = await requireUser(c);
     if (!user) return response;
@@ -253,7 +254,7 @@ app.get("/user/preferences", async (c) => {
   }
 });
 
-app.post("/user/preferences", async (c) => {
+app.post("/make-server-5be515e6/user/preferences", async (c) => {
   try {
     const { user, response } = await requireUser(c);
     if (!user) return response;
@@ -278,7 +279,7 @@ app.post("/user/preferences", async (c) => {
 // AUDIO VALIDATION
 // ---------------------------------------------------------------------------
 
-app.post("/validate-audio", async (c) => {
+app.post("/make-server-5be515e6/validate-audio", async (c) => {
   try {
     const contentType = c.req.header("content-type");
 
@@ -376,7 +377,7 @@ app.post("/validate-audio", async (c) => {
 // REPORTING SYSTEM
 // ---------------------------------------------------------------------------
 
-app.post("/report-audio", async (c) => {
+app.post("/make-server-5be515e6/report-audio", async (c) => {
   try {
     const { projectId, hotspotId, reason } = await c.req.json();
 
