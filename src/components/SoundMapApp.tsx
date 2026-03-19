@@ -481,6 +481,7 @@ const ShareDialogContent = ({
 }) => {
   const [link, setLink] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     setIsLoading(true);
@@ -492,6 +493,7 @@ const ShareDialogContent = ({
             throw new Error("No shortId returned");
           }
           setLink(`${window.location.origin}/s/${data.shortId}`);
+          setIsLoading(false);
         })
         .catch((err) => {
           console.error("Error creating share link:", err);
@@ -523,7 +525,7 @@ const ShareDialogContent = ({
       </div>
       <Button
         size="sm"
-        className="px-3"
+        className="px-3 gap-1"
         onClick={async () => {
           try {
             await navigator.clipboard.writeText(link);
@@ -534,10 +536,21 @@ const ShareDialogContent = ({
               document.execCommand("copy");
             }
           }
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2000);
         }}
       >
-        <span className="sr-only">Copy</span>
-        <Copy className="h-4 w-4" />
+        {copied ? (
+          <>
+            <Check className="h-4 w-4" />
+            <span className="text-xs">Copied</span>
+          </>
+        ) : (
+          <>
+            <Copy className="h-4 w-4" />
+            <span className="sr-only">Copy</span>
+          </>
+        )}
       </Button>
       <Button
         type="button"
@@ -1713,9 +1726,6 @@ export const SoundMapApp = () => {
         };
         const path = `${session.user.id}/${currentProject.id}/gc_${newChannel.id}_${Date.now()}.mp3`;
 
-        // Add the new channel to collapsed state
-        setCollapsedChannels((prev) => new Set([...prev, newChannel.id]));
-
         handleUpdateProject((p) => ({
           ...p,
           globalChannels: [
@@ -1814,9 +1824,6 @@ export const SoundMapApp = () => {
           const audioUrl =
             sound.previews["preview-hq-mp3"] ||
             sound.previews["preview-lq-mp3"];
-
-          // Add the new channel to collapsed state
-          setCollapsedChannels((prev) => new Set([...prev, newChannel.id]));
 
           handleUpdateProject((p) => ({
             ...p,
@@ -3128,19 +3135,15 @@ const PlayerView = ({
             <Play className="w-6 h-6 mr-2 fill-current" />
             Start Experience
           </Button>
-          <Button
-            variant="ghost"
-            className="text-slate-400 hover:text-slate-300"
-            onClick={handleBack}
-          >
-            {isShared ? (
-              "Create Your Own"
-            ) : (
-              <>
-                <ArrowLeft className="w-4 h-4 mr-2" /> Back to Editor
-              </>
-            )}
-          </Button>
+          {!isShared && (
+            <Button
+              variant="ghost"
+              className="text-slate-400 hover:text-slate-300"
+              onClick={handleBack}
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" /> Back to Editor
+            </Button>
+          )}
         </div>
       </div>
     );
@@ -3148,8 +3151,8 @@ const PlayerView = ({
 
   return (
     <div className="fixed inset-0 bg-slate-900 flex flex-col z-50">
-      <div className="absolute top-4 left-4 z-50">
-        {!isShared ? (
+      {!isShared && (
+        <div className="absolute top-4 left-4 z-50">
           <Button
             variant="outline"
             size="sm"
@@ -3158,19 +3161,8 @@ const PlayerView = ({
           >
             <ArrowLeft className="w-4 h-4 mr-2" /> Back to Edit
           </Button>
-        ) : (
-          <Button
-            variant="outline"
-            size="sm"
-            className="bg-black/20 text-white border-white/20 backdrop-blur-md hover:bg-black/40"
-            onClick={() => {
-              window.location.href = window.location.pathname;
-            }}
-          >
-            <Plus className="w-4 h-4 mr-2" /> Create Map
-          </Button>
-        )}
-      </div>
+        </div>
+      )}
 
       <div
         className="flex-1 flex items-center justify-center p-4 overflow-hidden"

@@ -3,11 +3,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from './ui/button';
 import { Upload, Mic, Play, Pause, X, Check, Square } from 'lucide-react';
 import { toast } from 'sonner@2.0.3';
-import { 
-    validateFileType, 
-    validateFileSize, 
+import {
+    validateFileType,
+    validateFileSize,
     validateAudioDuration,
-    ValidationResult 
+    ValidationResult
 } from '../utils/audioValidation';
 
 interface NarrationModalProps {
@@ -106,7 +106,8 @@ export const NarrationModal = ({ open, onClose, onSave, sessionUserId, projectId
             };
             
             mediaRecorder.onstop = () => {
-                const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+                const mimeType = mediaRecorder.mimeType || 'audio/webm';
+                const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
                 setRecordedBlob(audioBlob);
                 
                 // Stop all tracks
@@ -181,7 +182,13 @@ export const NarrationModal = ({ open, onClose, onSave, sessionUserId, projectId
                 recordingAudioRef.current = null;
             };
             
-            audio.play();
+            audio.play().catch((err) => {
+                console.error('Playback failed:', err);
+                setIsPlayingRecording(false);
+                URL.revokeObjectURL(audioUrl);
+                recordingAudioRef.current = null;
+                toast.error('Playback failed. Your browser may not support this audio format.');
+            });
             recordingAudioRef.current = audio;
             setIsPlayingRecording(true);
         }
@@ -209,24 +216,25 @@ export const NarrationModal = ({ open, onClose, onSave, sessionUserId, projectId
             onSave(uploadedFile, path);
             onClose();
         } else if (activeTab === 'record' && recordedBlob) {
-            // Convert recorded blob to File
-            const file = new File([recordedBlob], `recording_${Date.now()}.webm`, { type: 'audio/webm' });
-            
+            // Convert recorded blob to File using the actual mime type
+            const mimeType = recordedBlob.type || 'audio/webm';
+            const ext = mimeType.includes('mp4') ? 'mp4' : mimeType.includes('ogg') ? 'ogg' : 'webm';
+            const file = new File([recordedBlob], `recording_${Date.now()}.${ext}`, { type: mimeType });
+
             // Validate the recording size (for recordings)
             const sizeValidation = validateFileSize(file.size, true);
             if (!sizeValidation.isValid) {
                 toast.error(sizeValidation.error || 'Recording too large');
                 return;
             }
-            
-            // Validate duration (for recordings)
-            const durationValidation = await validateAudioDuration(file, true);
-            if (!durationValidation.isValid) {
-                toast.error(durationValidation.error || 'Recording too long');
+
+            // Duration is already enforced by the recording timer (3-minute limit)
+            if (recordingDuration > 180) {
+                toast.error('Recording exceeds 3 minute limit.');
                 return;
             }
-            
-            const path = `${sessionUserId}/${projectId}/intro_${Date.now()}.webm`;
+
+            const path = `${sessionUserId}/${projectId}/intro_${Date.now()}.${ext}`;
             onSave(file, path);
             onClose();
         } else {

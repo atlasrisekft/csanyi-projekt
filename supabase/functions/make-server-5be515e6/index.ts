@@ -4,8 +4,7 @@ import { logger } from "npm:hono/logger";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { requireUser } from "./auth.ts";
 
-const app = new Hono();
-
+const app = new Hono().basePath("/make-server-5be515e6");
 // Enable logger
 if (Deno.env.get("ENV") !== "production") {
   app.use("*", logger(console.log));
@@ -14,13 +13,20 @@ if (Deno.env.get("ENV") !== "production") {
 const allowedOrigins = ["http://localhost:3000", "https://csanyi-projekt-4kzefqdec-tetsuchiis-projects.vercel.app", "https://atlasrisekft.github.io/csanyi-projekt/", "https://csanyi-projekt-git-feature-share-links-path-tetsuchiis-projects.vercel.app/#"];
 
 app.use(
-  "/*",
+  "*",
   cors({
     origin: "*",
     allowHeaders: ["Content-Type", "Authorization"],
     allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  }),
+    exposeHeaders: ["Content-Length"],
+    maxAge: 600,
+  })
 );
+
+// 👇 explicitly handle preflight
+app.options("*", (c) => {
+  return c.text("", 204);
+});
 
 // CONSTANTS
 const BUCKET_NAME = "make-5be515e6-assets";
@@ -237,41 +243,43 @@ app.post("/invite", async (c) => {
 // ---------------------------------------------------------------------------
 
 app.get("/user/preferences", async (c) => {
-  try {
-    const { user, response } = await requireUser(c);
-    if (!user) return response;
+  const { user, response } = await requireUser(c);
+  if (!user) return response;
 
-    const key = `prefs_${user.id}`;
-    const prefs = await kv.get(key);
+  const supabase = getSupabaseAdmin();
 
-    return c.json({
-      preferences: prefs || {},
-    });
-  } catch (err) {
-    console.error(err);
-    return c.json({ error: "Internal server error" }, 500);
+  const { data, error } = await supabase
+    .from("user_preferences")
+    .select("data")
+    .eq("user_id", user.id)
+    .single();
+
+  if (error && error.code !== "PGRST116") {
+    return c.json({ error: error.message }, 500);
   }
+
+  return c.json({
+    preferences: data?.data || {},
+  });
 });
 
 app.post("/user/preferences", async (c) => {
-  try {
-    const { user, response } = await requireUser(c);
-    if (!user) return response;
+  const { user, response } = await requireUser(c);
+  if (!user) return response;
 
-    const body = await c.req.json();
-    const key = `prefs_${user.id}`;
+  const body = await c.req.json();
+  const supabase = getSupabaseAdmin();
 
-    const existing = (await kv.get(key)) || {};
-    await kv.set(key, {
-      ...existing,
-      ...body,
-    });
+  const { error } = await supabase.from("user_preferences").upsert({
+    user_id: user.id,
+    data: body,
+  });
 
-    return c.json({ success: true });
-  } catch (err) {
-    console.error(err);
-    return c.json({ error: "Internal server error" }, 500);
+  if (error) {
+    return c.json({ error: error.message }, 500);
   }
+
+  return c.json({ success: true });
 });
 
 // ---------------------------------------------------------------------------
