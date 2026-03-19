@@ -1,6 +1,6 @@
 import { projectId, publicAnonKey } from './supabase/info';
 
-const BASE_URL = `https://${projectId}.supabase.co/functions/v1/make-server-5be515e6`;
+const BASE_URL = "https://wexbjcdxnblsqmjemfvq.supabase.co/functions/v1/make-server-5be515e6";
 
 const getHeaders = (token: string) => ({
     'Content-Type': 'application/json',
@@ -114,15 +114,8 @@ export const loadProjects = async (token: string) => {
 };
 
 export const getSharedProject = async (shortId: string) => {
-    // 1. resolve shortId → userId + projectId
-    const resolveRes = await fetch(`${BASE_URL}/share/resolve?id=${shortId}`);
-    if (!resolveRes.ok) throw new Error("Invalid share link");
-
-    const { userId, projectId } = await resolveRes.json();
-
-    // 2. fetch actual project
-    const projectRes = await fetch(
-        `${BASE_URL}/public/project?userId=${userId}&projectId=${projectId}`,
+    const res = await fetch(
+        `${BASE_URL}/public/project?id=${shortId}`,
         {
             headers: {
                 Authorization: `Bearer ${publicAnonKey}`
@@ -130,9 +123,9 @@ export const getSharedProject = async (shortId: string) => {
         }
     );
 
-    if (!projectRes.ok) throw new Error("Failed to load project");
+    if (!res.ok) throw new Error("Failed to load project");
 
-    const { project } = await projectRes.json();
+    const { project } = await res.json();
     return project;
 };
 
