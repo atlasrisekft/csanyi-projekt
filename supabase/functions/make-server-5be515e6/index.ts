@@ -554,4 +554,18 @@ app.get("/public/project", async (c) => {
   }
 });
 
-Deno.serve(app.fetch);
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+};
+
+Deno.serve(async (req: Request) => {
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
+  }
+  const res = await app.fetch(req);
+  const newHeaders = new Headers(res.headers);
+  Object.entries(corsHeaders).forEach(([k, v]) => newHeaders.set(k, v));
+  return new Response(res.body, { status: res.status, headers: newHeaders });
+});
