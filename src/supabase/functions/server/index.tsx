@@ -11,15 +11,15 @@ if (Deno.env.get("ENV") !== "production") {
   app.use("*", logger(console.log));
 }
 
-const allowedOrigins = ["http://localhost:3000", "https://yourdomain.com"];
+const allowedOrigins = ["http://localhost:3000", "https://csanyi-projekt-4kzefqdec-tetsuchiis-projects.vercel.app", "https://atlasrisekft.github.io/csanyi-projekt/", "https://csanyi-projekt-git-feature-share-links-path-tetsuchiis-projects.vercel.app/#"];
 
 app.use(
   "/*",
   cors({
-  origin: "*",
-  allowHeaders: ["Content-Type", "Authorization"],
-  allowMethods: ["GET", "POST"],
-}),
+    origin: "*",
+    allowHeaders: ["Content-Type", "Authorization"],
+    allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  }),
 );
 
 // CONSTANTS
