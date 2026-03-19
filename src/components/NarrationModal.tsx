@@ -106,7 +106,7 @@ export const NarrationModal = ({ open, onClose, onSave, sessionUserId, projectId
             };
             
             mediaRecorder.onstop = () => {
-                const mimeType = mediaRecorder.mimeType || 'audio/webm';
+                const mimeType = (mediaRecorder.mimeType || 'audio/webm').split(';')[0];
                 const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
                 setRecordedBlob(audioBlob);
                 
@@ -216,8 +216,8 @@ export const NarrationModal = ({ open, onClose, onSave, sessionUserId, projectId
             onSave(uploadedFile, path);
             onClose();
         } else if (activeTab === 'record' && recordedBlob) {
-            // Convert recorded blob to File using the actual mime type
-            const mimeType = recordedBlob.type || 'audio/webm';
+            // Convert recorded blob to File — strip codec params (e.g. audio/webm;codecs=opus → audio/webm)
+            const mimeType = (recordedBlob.type || 'audio/webm').split(';')[0];
             const ext = mimeType.includes('mp4') ? 'mp4' : mimeType.includes('ogg') ? 'ogg' : 'webm';
             const file = new File([recordedBlob], `recording_${Date.now()}.${ext}`, { type: mimeType });
 

@@ -465,7 +465,12 @@ const useAudioEngine = () => {
     }
   };
 
-  return { play, stop, stopAll, updateSettings };
+  const unlock = () => {
+    const ctx = getContext();
+    return ctx.resume();
+  };
+
+  return { play, stop, stopAll, updateSettings, unlock };
 };
 
 // ---------------------------------------------------------------------------
@@ -3019,6 +3024,9 @@ const PlayerView = ({
 
   const handleStart = () => {
     setHasStarted(true);
+
+    // Unlock AudioContext within this user gesture so hover audio works immediately
+    engine.unlock();
 
     // Request Fullscreen
     const elem = document.documentElement;
