@@ -24,6 +24,7 @@ import {
   ExternalLink,
   Loader2,
   AlertTriangle,
+  RefreshCw,
 } from "lucide-react";
 import { AuthView, supabase } from "./auth/AuthView";
 import { ProfileView } from "./auth/ProfileView";
@@ -124,6 +125,7 @@ export type Hotspot = {
   name: string;
   color: string;
   settings: AudioSettings;
+  accessibilityDescription?: string;
 };
 
 export type GlobalChannel = {
@@ -133,6 +135,7 @@ export type GlobalChannel = {
   audioUrl: string | null;
   audioPath?: string | null;
   settings: AudioSettings;
+  accessibilityDescription?: string;
 };
 
 export type Project = {
@@ -147,6 +150,7 @@ export type Project = {
   introAudioUrl: string | null;
   introAudioPath?: string | null;
   introAudioLoop: boolean;
+  introAudioAccessibilityDescription?: string;
   createdAt: number;
 };
 
@@ -256,27 +260,73 @@ const FadeSlider = ({
   </div>
 );
 
+const hueFromHex = (hex: string): number => {
+  if (!hex || !hex.startsWith("#") || hex.length < 7) return 0;
+  const r = parseInt(hex.slice(1, 3), 16) / 255;
+  const g = parseInt(hex.slice(3, 5), 16) / 255;
+  const b = parseInt(hex.slice(5, 7), 16) / 255;
+  const max = Math.max(r, g, b),
+    min = Math.min(r, g, b);
+  if (max === min) return 0;
+  const d = max - min;
+  let h =
+    max === r
+      ? ((g - b) / d + (g < b ? 6 : 0)) / 6
+      : max === g
+        ? ((b - r) / d + 2) / 6
+        : ((r - g) / d + 4) / 6;
+  return Math.round(h * 360);
+};
+
+const hueToHex = (hue: number): string => {
+  const s = 0.75,
+    l = 0.5;
+  const a = s * Math.min(l, 1 - l);
+  const f = (n: number) => {
+    const k = (n + hue / 30) % 12;
+    return l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+  };
+  const toHex = (x: number) =>
+    Math.round(x * 255)
+      .toString(16)
+      .padStart(2, "0");
+  return `#${toHex(f(0))}${toHex(f(8))}${toHex(f(4))}`;
+};
+
 const ColorPicker = ({
   value,
   onChange,
 }: {
   value: string;
   onChange: (color: string) => void;
-}) => (
-  <div className="space-y-3">
-    <Label className="text-xs text-slate-500 font-medium">Zone Color</Label>
-    <div className="flex flex-wrap gap-2">
-      {COLORS.map((color) => (
-        <button
-          key={color}
-          onClick={() => onChange(color)}
-          className={`w-6 h-6 rounded-full transition-all ${value === color ? "ring-2 ring-offset-2 ring-slate-400 scale-110" : "hover:scale-110"}`}
-          style={{ backgroundColor: color }}
+}) => {
+  const hue = hueFromHex(value);
+  return (
+    <div className="space-y-2">
+      <p className="text-sm text-slate-500">Zone colour</p>
+      <div
+        className="relative h-4 rounded-full"
+        style={{
+          background:
+            "linear-gradient(to right, hsl(0,75%,50%), hsl(60,75%,50%), hsl(120,75%,50%), hsl(180,75%,50%), hsl(240,75%,50%), hsl(300,75%,50%), hsl(360,75%,50%))",
+        }}
+      >
+        <input
+          type="range"
+          min={0}
+          max={360}
+          value={hue}
+          onChange={(e) => onChange(hueToHex(Number(e.target.value)))}
+          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
         />
-      ))}
+        <div
+          className="absolute top-0 bottom-0 w-4 h-4 rounded-full bg-white border-2 border-white shadow-md pointer-events-none"
+          style={{ left: `calc(${(hue / 360) * 100}% - 8px)` }}
+        />
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 // ---------------------------------------------------------------------------
 // AUDIO ENGINE HOOK
@@ -617,231 +667,22 @@ const SettingsPanelContent = ({
   toggleZonePreview: (hotspot: Hotspot) => void;
   setIsCanvasHighlighted?: (highlighted: boolean) => void;
 }) => {
-  const selectedHotspot = project.hotspots.find(
-    (h) => h.id === selectedHotspotId,
+  const [advancedOpenIds, setAdvancedOpenIds] = React.useState<Set<string>>(
+    new Set(),
   );
-
-  if (selectedHotspot) {
-    return (
-      <div className="p-6 space-y-6">
-        <div className="flex items-center justify-between">
-          <h2 className="font-bold text-lg">Zone Settings</h2>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => {
-              if (typeof setSelectedHotspotId === "function")
-                setSelectedHotspotId(null);
-            }}
-          >
-            <X className="w-4 h-4" />
-          </Button>
-        </div>
-
-        <div className="space-y-5">
-          <div className="space-y-2">
-            <Label>Name</Label>
-            <Input
-              value={selectedHotspot.name}
-              onChange={(e) =>
-                onUpdate((p) => ({
-                  ...p,
-                  hotspots: p.hotspots.map((h) =>
-                    h.id === selectedHotspot.id
-                      ? { ...h, name: e.target.value }
-                      : h,
-                  ),
-                }))
-              }
-            />
-          </div>
-
-          <ColorPicker
-            value={selectedHotspot.color}
-            onChange={(color) =>
-              onUpdate((p) => ({
-                ...p,
-                hotspots: p.hotspots.map((h) =>
-                  h.id === selectedHotspot.id ? { ...h, color: color } : h,
-                ),
-              }))
-            }
-          />
-
-          <div className="space-y-2">
-            <Label>Audio File</Label>
-            {selectedHotspot.audioUrl ? (
-              <div className="bg-slate-50 border rounded-lg p-3">
-                <div className="flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-2 min-w-0 flex-1">
-                    <Button
-                      size="icon"
-                      variant="outline"
-                      className="h-8 w-8 shrink-0"
-                      onClick={() => toggleZonePreview(selectedHotspot)}
-                    >
-                      {previewingZoneId === selectedHotspot.id ? (
-                        <Pause className="w-4 h-4" />
-                      ) : (
-                        <Play className="w-4 h-4" />
-                      )}
-                    </Button>
-                    <span className="truncate text-sm font-medium text-slate-700">
-                      {selectedHotspot.audioFile?.name || "Audio Track"}
-                    </span>
-                  </div>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="h-6 w-6 text-red-500 shrink-0"
-                    onClick={() =>
-                      onUpdate((p) => ({
-                        ...p,
-                        hotspots: p.hotspots.map((h) =>
-                          h.id === selectedHotspot.id
-                            ? {
-                                ...h,
-                                audioFile: null,
-                                audioUrl: null,
-                                audioPath: null,
-                              }
-                            : h,
-                        ),
-                      }))
-                    }
-                  >
-                    <Trash2 className="w-3 h-3" />
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              <Button
-                id="tour-zone-upload-audio"
-                variant="outline"
-                size="sm"
-                className="w-full"
-                onClick={() => openUploadModal("hotspot", selectedHotspot.id)}
-              >
-                <Upload className="w-4 h-4 mr-2" /> Upload Audio
-              </Button>
-            )}
-          </div>
-
-          {selectedHotspot.audioUrl && (
-            <div className="space-y-6 pt-2">
-              <div className="flex items-center justify-between bg-slate-50 p-3 rounded-lg">
-                <div className="flex items-center gap-2">
-                  <Repeat className="w-4 h-4 text-slate-500" />
-                  <Label className="text-xs">Loop Audio</Label>
-                </div>
-                <Switch
-                  checked={selectedHotspot.settings.loop}
-                  onCheckedChange={(c) =>
-                    onUpdate((p) => ({
-                      ...p,
-                      hotspots: p.hotspots.map((h) =>
-                        h.id === selectedHotspot.id
-                          ? { ...h, settings: { ...h.settings, loop: c } }
-                          : h,
-                      ),
-                    }))
-                  }
-                />
-              </div>
-              <VolumeSlider
-                value={selectedHotspot.settings.volume}
-                onChange={(v) =>
-                  onUpdate((p) => ({
-                    ...p,
-                    hotspots: p.hotspots.map((h) =>
-                      h.id === selectedHotspot.id
-                        ? { ...h, settings: { ...h.settings, volume: v } }
-                        : h,
-                    ),
-                  }))
-                }
-              />
-              <div className="grid grid-cols-2 gap-4">
-                <FadeSlider
-                  label="Fade In"
-                  value={selectedHotspot.settings.fadeIn ?? 0.5}
-                  onChange={(v) =>
-                    onUpdate((p) => ({
-                      ...p,
-                      hotspots: p.hotspots.map((h) =>
-                        h.id === selectedHotspot.id
-                          ? { ...h, settings: { ...h.settings, fadeIn: v } }
-                          : h,
-                      ),
-                    }))
-                  }
-                />
-                <FadeSlider
-                  label="Fade Out"
-                  value={selectedHotspot.settings.fadeOut ?? 0.5}
-                  onChange={(v) =>
-                    onUpdate((p) => ({
-                      ...p,
-                      hotspots: p.hotspots.map((h) =>
-                        h.id === selectedHotspot.id
-                          ? { ...h, settings: { ...h.settings, fadeOut: v } }
-                          : h,
-                      ),
-                    }))
-                  }
-                />
-              </div>
-              <PanSlider
-                value={selectedHotspot.settings.pan}
-                onChange={(v) =>
-                  onUpdate((p) => ({
-                    ...p,
-                    hotspots: p.hotspots.map((h) =>
-                      h.id === selectedHotspot.id
-                        ? { ...h, settings: { ...h.settings, pan: v } }
-                        : h,
-                    ),
-                  }))
-                }
-              />
-            </div>
-          )}
-
-          <div className="pt-6 border-t space-y-3">
-            <Button
-              id="tour-zone-done-btn"
-              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white"
-              onClick={() => setSelectedHotspotId(null)}
-            >
-              <Check className="w-4 h-4 mr-2" /> Done
-            </Button>
-            <Button
-              variant="destructive"
-              className="w-full"
-              onClick={() => {
-                onUpdate((p) => ({
-                  ...p,
-                  hotspots: p.hotspots.filter(
-                    (h) => h.id !== selectedHotspot.id,
-                  ),
-                }));
-                setSelectedHotspotId(null);
-              }}
-            >
-              <Trash2 className="w-4 h-4 mr-2" /> Delete Zone
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const toggleAdvanced = (id: string) =>
+    setAdvancedOpenIds((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
 
   return (
     <div className="p-6 space-y-8">
       <div>
         <h2 className="font-bold text-lg mb-4">Project Settings</h2>
 
-        <div className="space-y-4 mb-6" id="tour-intro-audio">
+        <div className="space-y-3 mb-6" id="tour-intro-audio">
           <Label className="text-slate-500 text-xs uppercase tracking-wider font-bold">
             Screen Narration
           </Label>
@@ -862,311 +703,296 @@ const SettingsPanelContent = ({
               </p>
             </div>
           ) : (
-            <div
-              className={`bg-white border rounded-lg p-3 shadow-sm ${collapsedIntroAudio ? "cursor-pointer hover:border-indigo-300 transition-colors" : ""}`}
-              onClick={
-                collapsedIntroAudio ? toggleIntroAudioCollapse : undefined
-              }
-            >
-              <div className="flex items-center justify-between gap-2">
+            <div className="bg-white border rounded-lg shadow-sm overflow-hidden">
+              {/* Header row */}
+              <div
+                className="flex items-center gap-3 h-12 px-3 cursor-pointer"
+                onClick={toggleIntroAudioCollapse}
+              >
                 <div
-                  className="flex items-center gap-2 flex-1 cursor-pointer min-w-0"
-                  onClick={
-                    !collapsedIntroAudio
-                      ? toggleIntroAudioCollapse
-                      : (e) => e.stopPropagation()
-                  }
+                  className="flex-1 bg-slate-100 rounded-lg h-9 flex items-center px-3 min-w-0"
+                  onClick={(e) => e.stopPropagation()}
                 >
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    className="h-6 w-6 shrink-0 text-slate-400 hover:text-slate-600"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggleIntroAudioCollapse();
-                    }}
-                  >
-                    {collapsedIntroAudio ? (
-                      <ChevronDown className="w-4 h-4" />
-                    ) : (
-                      <ChevronUp className="w-4 h-4" />
-                    )}
-                  </Button>
-                  <Input
-                    className="h-7 text-sm font-medium border-none flex-1 min-w-0 focus-visible:ring-0"
+                  <input
+                    className="w-full bg-transparent text-sm text-slate-900 outline-none truncate"
                     value={project.introAudioFile?.name || "Narration"}
-                    onChange={(e) => {
-                      e.stopPropagation();
+                    onChange={(e) =>
                       onUpdate((p) => ({
                         ...p,
                         introAudioFile: {
                           ...(p.introAudioFile || {}),
                           name: e.target.value,
                         } as any,
-                      }));
-                    }}
-                    onClick={(e) => e.stopPropagation()}
+                      }))
+                    }
                   />
                 </div>
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className="h-6 w-6 text-slate-400 hover:text-red-500 shrink-0"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (previewingIntroAudio) {
-                      engine.stop("preview-intro");
-                      setPreviewingIntroAudio(false);
-                      if (introPreviewTimerRef.current) {
-                        clearTimeout(introPreviewTimerRef.current);
-                        introPreviewTimerRef.current = null;
-                      }
-                    }
-                    onUpdate((p) => ({
-                      ...p,
-                      introAudioFile: null,
-                      introAudioUrl: null,
-                      introAudioPath: null,
-                    }));
-                  }}
-                >
-                  <X className="w-3 h-3" />
-                </Button>
+                <button className="w-9 h-9 flex items-center justify-center shrink-0 text-slate-500">
+                  {collapsedIntroAudio ? (
+                    <ChevronDown className="w-4 h-4" />
+                  ) : (
+                    <ChevronUp className="w-4 h-4" />
+                  )}
+                </button>
               </div>
 
+              {/* Expanded settings */}
               {!collapsedIntroAudio && (
-                <div className="space-y-3 mt-3">
-                  <div className="rounded-[0px] px-[0px] pt-[12px] pb-[0px]">
-                    <div className="flex items-center justify-between gap-3 mb-3">
-                      <div className="flex items-center gap-2 min-w-0 flex-1">
-                        <Button
-                          size="icon"
-                          variant="outline"
-                          className="h-8 w-8 shrink-0"
-                          onClick={toggleIntroAudioPreview}
-                        >
-                          {previewingIntroAudio ? (
-                            <Pause className="w-4 h-4" />
-                          ) : (
-                            <Play className="w-4 h-4" />
-                          )}
-                        </Button>
-                        <span className="text-sm font-medium text-slate-700">
-                          Audio Track
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        <span className="text-xs font-medium text-slate-600">
-                          Loop
-                        </span>
-                        <Switch
-                          checked={project.introAudioLoop}
-                          onCheckedChange={(c) =>
-                            onUpdate((p) => ({ ...p, introAudioLoop: c }))
-                          }
-                        />
-                      </div>
-                    </div>
+                <div className="border-t border-slate-100 px-3 pb-4 pt-4 space-y-5">
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium text-slate-900">
+                      Accessibility description
+                    </Label>
+                    <textarea
+                      className="w-full bg-slate-100 rounded-lg px-3 py-2 text-sm text-slate-500 outline-none resize-none min-h-[72px]"
+                      placeholder={`Describe this narration for blind users, e.g. "A warm voice guiding you through the sound map."`}
+                      value={project.introAudioAccessibilityDescription ?? ""}
+                      onChange={(e) =>
+                        onUpdate((p) => ({
+                          ...p,
+                          introAudioAccessibilityDescription: e.target.value,
+                        }))
+                      }
+                    />
+                    <p className="text-xs text-slate-400">
+                      Read aloud by screen readers (VoiceOver / TalkBack)
+                      when this narration is activated.
+                    </p>
                   </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setNarrationModalOpen(true);
-                    }}
-                  >
-                    <Upload className="w-3 h-3 mr-2" /> Change Audio
-                  </Button>
-                  <Button
-                    size="sm"
-                    className="w-full bg-indigo-600 hover:bg-indigo-700 text-white"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggleIntroAudioCollapse();
-                    }}
-                  >
-                    Save
-                  </Button>
+
+                  <div className="flex gap-2">
+                    <button
+                      className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg border text-sm font-medium transition-colors"
+                      style={{
+                        borderColor: "#bedbff",
+                        color: "#2b7fff",
+                      }}
+                      onClick={toggleIntroAudioPreview}
+                    >
+                      {previewingIntroAudio ? (
+                        <Pause className="w-4 h-4" />
+                      ) : (
+                        <Play className="w-4 h-4" />
+                      )}
+                      Listen
+                    </button>
+                    <button
+                      className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg border border-black/10 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50"
+                      onClick={() => setNarrationModalOpen(true)}
+                    >
+                      <RefreshCw className="w-4 h-4" />
+                      Replace
+                    </button>
+                  </div>
+
+                  <div className="border-t border-slate-100 pt-5 space-y-3">
+                    <button
+                      className="w-full h-9 rounded-lg text-sm font-medium text-white"
+                      style={{ backgroundColor: "#2b7fff" }}
+                      onClick={toggleIntroAudioCollapse}
+                    >
+                      Save
+                    </button>
+                    <button
+                      className="w-full h-9 text-sm font-medium text-red-500"
+                      onClick={() => {
+                        if (previewingIntroAudio) {
+                          engine.stop("preview-intro");
+                          if (introPreviewTimerRef.current) {
+                            clearTimeout(introPreviewTimerRef.current);
+                            introPreviewTimerRef.current = null;
+                          }
+                        }
+                        onUpdate((p) => ({
+                          ...p,
+                          introAudioFile: null,
+                          introAudioUrl: null,
+                          introAudioPath: null,
+                          introAudioAccessibilityDescription: undefined,
+                        }));
+                      }}
+                    >
+                      Delete Narration
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
           )}
         </div>
 
-        <div className="mb-6" id="tour-add-channel">
-          <div className="flex items-center justify-between mb-4">
-            <Label className="text-slate-500 text-xs uppercase tracking-wider font-bold">
-              Background Channels
-            </Label>
-            <Button size="sm" variant="outline" onClick={addGlobalChannel}>
-              <Plus className="w-3 h-3 mr-1" /> Add
-            </Button>
-          </div>
+        <div className="mb-6 space-y-3" id="tour-add-channel">
+          <Label className="text-slate-500 text-xs uppercase tracking-wider font-bold">
+            Background Channels
+          </Label>
 
-          <div className="space-y-3">
-            {(project.globalChannels || []).length === 0 && (
-              <div
-                className="border-2 border-dashed border-slate-200 rounded-lg p-4 text-center hover:border-indigo-300 transition-colors cursor-pointer"
-                onClick={addGlobalChannel}
-              >
-                <div className="mx-auto w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center mb-2 text-slate-400">
-                  <Plus className="w-5 h-5" />
-                </div>
-                <p className="text-sm font-medium text-slate-600">
-                  Add Background Audio
-                </p>
-                <p className="text-xs text-slate-400 mt-1">
-                  Rain, city noise, or ambient music
-                </p>
+          {(project.globalChannels || []).length === 0 && (
+            <div
+              className="border-2 border-dashed border-slate-200 rounded-lg p-4 text-center hover:border-indigo-300 transition-colors cursor-pointer"
+              onClick={addGlobalChannel}
+            >
+              <div className="mx-auto w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center mb-2 text-slate-400">
+                <Plus className="w-5 h-5" />
               </div>
-            )}
-            {(project.globalChannels || []).map((channel) => {
-              const isCollapsed = collapsedChannels.has(channel.id);
-              return (
+              <p className="text-sm font-medium text-slate-600">
+                Add Background Audio
+              </p>
+              <p className="text-xs text-slate-400 mt-1">
+                Rain, city noise, or ambient music
+              </p>
+            </div>
+          )}
+          {(project.globalChannels || []).map((channel) => {
+            const isCollapsed = collapsedChannels.has(channel.id);
+            const isChAdvancedOpen = advancedOpenIds.has(channel.id);
+            return (
+              <div
+                key={channel.id}
+                className="bg-white border rounded-lg shadow-sm overflow-hidden"
+              >
+                {/* Header row */}
                 <div
-                  key={channel.id}
-                  className={`bg-white border rounded-lg p-3 shadow-sm ${isCollapsed ? "cursor-pointer hover:border-indigo-300 transition-colors" : ""}`}
-                  onClick={
-                    isCollapsed
-                      ? () => toggleChannelCollapse(channel.id)
-                      : undefined
-                  }
+                  className="flex items-center gap-3 h-12 px-3 cursor-pointer"
+                  onClick={() => toggleChannelCollapse(channel.id)}
                 >
-                  <div className="flex items-center justify-between gap-2">
-                    <div
-                      className="flex items-center gap-2 flex-1 cursor-pointer min-w-0"
-                      onClick={
-                        !isCollapsed
-                          ? () => toggleChannelCollapse(channel.id)
-                          : (e) => e.stopPropagation()
+                  <div
+                    className="flex-1 bg-slate-100 rounded-lg h-9 flex items-center px-3 min-w-0"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <input
+                      className="w-full bg-transparent text-sm text-slate-900 outline-none truncate"
+                      value={channel.name}
+                      onChange={(e) =>
+                        onUpdate((p) => ({
+                          ...p,
+                          globalChannels: p.globalChannels.map((c) =>
+                            c.id === channel.id
+                              ? { ...c, name: e.target.value }
+                              : c,
+                          ),
+                        }))
                       }
-                    >
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="h-6 w-6 shrink-0 text-slate-400 hover:text-slate-600"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleChannelCollapse(channel.id);
-                        }}
-                      >
-                        {isCollapsed ? (
-                          <ChevronDown className="w-4 h-4" />
-                        ) : (
-                          <ChevronUp className="w-4 h-4" />
-                        )}
-                      </Button>
-                      <Input
-                        className="h-7 text-sm font-medium border-none flex-1 min-w-0 focus-visible:ring-0"
-                        value={channel.name}
-                        onChange={(e) => {
-                          e.stopPropagation();
+                    />
+                  </div>
+                  <button className="w-9 h-9 flex items-center justify-center shrink-0 text-slate-500">
+                    {isCollapsed ? (
+                      <ChevronDown className="w-4 h-4" />
+                    ) : (
+                      <ChevronUp className="w-4 h-4" />
+                    )}
+                  </button>
+                </div>
+
+                {/* Expanded settings */}
+                {!isCollapsed && (
+                  <div className="border-t border-slate-100 px-3 pb-4 pt-4 space-y-5">
+                    <div className="space-y-1.5">
+                      <Label className="text-sm font-medium text-slate-900">
+                        Accessibility description
+                      </Label>
+                      <textarea
+                        className="w-full bg-slate-100 rounded-lg px-3 py-2 text-sm text-slate-500 outline-none resize-none min-h-[72px]"
+                        placeholder={`Describe this sound for blind users, e.g. "Gentle rain ambience playing throughout the experience."`}
+                        value={channel.accessibilityDescription ?? ""}
+                        onChange={(e) =>
                           onUpdate((p) => ({
                             ...p,
                             globalChannels: p.globalChannels.map((c) =>
                               c.id === channel.id
-                                ? { ...c, name: e.target.value }
+                                ? {
+                                    ...c,
+                                    accessibilityDescription: e.target.value,
+                                  }
                                 : c,
                             ),
-                          }));
-                        }}
-                        onClick={(e) => e.stopPropagation()}
+                          }))
+                        }
                       />
+                      <p className="text-xs text-slate-400">
+                        Read aloud by screen readers (VoiceOver / TalkBack)
+                        when this channel is activated.
+                      </p>
                     </div>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="h-6 w-6 text-slate-400 hover:text-red-500 shrink-0"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onUpdate((p) => ({
-                          ...p,
-                          globalChannels: p.globalChannels.filter(
-                            (c) => c.id !== channel.id,
-                          ),
-                        }));
-                      }}
-                    >
-                      <X className="w-3 h-3" />
-                    </Button>
-                  </div>
 
-                  {!isCollapsed &&
-                    (!channel.audioUrl ? (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="w-full text-xs mt-3"
+                    <div className="flex gap-2">
+                      <button
+                        className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg border text-sm font-medium transition-colors"
+                        style={{
+                          borderColor: channel.audioUrl ? "#bedbff" : "#e2e8f0",
+                          color: channel.audioUrl ? "#2b7fff" : "#94a3b8",
+                        }}
+                        onClick={() =>
+                          channel.audioUrl && toggleChannelPreview(channel)
+                        }
+                        disabled={!channel.audioUrl}
+                      >
+                        {previewingChannelId === channel.id ? (
+                          <Pause className="w-4 h-4" />
+                        ) : (
+                          <Play className="w-4 h-4" />
+                        )}
+                        Listen
+                      </button>
+                      <button
+                        className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg border border-black/10 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50"
                         onClick={() => openUploadModal("channel", channel.id)}
                       >
-                        <Upload className="w-3 h-3 mr-2" /> Upload Audio
-                      </Button>
-                    ) : (
-                      <div className="space-y-3 mt-3">
-                        <div className="rounded-[0px] px-[0px] pt-[12px] pb-[0px]">
-                          <div className="flex items-center justify-between gap-3 mb-3">
-                            <div className="flex items-center gap-2 min-w-0 flex-1">
-                              <Button
-                                size="icon"
-                                variant="outline"
-                                className="h-8 w-8 shrink-0"
-                                onClick={() => toggleChannelPreview(channel)}
-                              >
-                                {previewingChannelId === channel.id ? (
-                                  <Pause className="w-4 h-4" />
-                                ) : (
-                                  <Play className="w-4 h-4" />
-                                )}
-                              </Button>
-                              <span className="truncate text-sm font-medium text-slate-700">
-                                {channel.audioFile?.name || "Audio Track"}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-2 shrink-0">
-                              <span className="text-xs font-medium text-slate-600">
-                                Loop
-                              </span>
-                              <Switch
-                                checked={channel.settings.loop}
-                                onCheckedChange={(c) =>
-                                  onUpdate((p) => ({
-                                    ...p,
-                                    globalChannels: p.globalChannels.map(
-                                      (ch) =>
-                                        ch.id === channel.id
-                                          ? {
-                                              ...ch,
-                                              settings: {
-                                                ...ch.settings,
-                                                loop: c,
-                                              },
-                                            }
-                                          : ch,
-                                    ),
-                                  }))
+                        <RefreshCw className="w-4 h-4" />
+                        {channel.audioUrl ? "Replace" : "Upload"}
+                      </button>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-slate-600">Loop audio</span>
+                      <Switch
+                        checked={channel.settings.loop}
+                        onCheckedChange={(c) =>
+                          onUpdate((p) => ({
+                            ...p,
+                            globalChannels: p.globalChannels.map((ch) =>
+                              ch.id === channel.id
+                                ? {
+                                    ...ch,
+                                    settings: { ...ch.settings, loop: c },
+                                  }
+                                : ch,
+                            ),
+                          }))
+                        }
+                      />
+                    </div>
+
+                    <VolumeSlider
+                      value={channel.settings.volume}
+                      onChange={(v) =>
+                        onUpdate((p) => ({
+                          ...p,
+                          globalChannels: p.globalChannels.map((ch) =>
+                            ch.id === channel.id
+                              ? {
+                                  ...ch,
+                                  settings: { ...ch.settings, volume: v },
                                 }
-                              />
-                            </div>
-                          </div>
-                        </div>
-                        <VolumeSlider
-                          value={channel.settings.volume}
-                          onChange={(v) =>
-                            onUpdate((p) => ({
-                              ...p,
-                              globalChannels: p.globalChannels.map((ch) =>
-                                ch.id === channel.id
-                                  ? {
-                                      ...ch,
-                                      settings: { ...ch.settings, volume: v },
-                                    }
-                                  : ch,
-                              ),
-                            }))
-                          }
-                        />
+                              : ch,
+                          ),
+                        }))
+                      }
+                    />
+
+                    <button
+                      className="flex items-center justify-between w-full text-sm text-slate-500 py-1"
+                      onClick={() => toggleAdvanced(channel.id)}
+                    >
+                      <span>Advanced settings</span>
+                      {isChAdvancedOpen ? (
+                        <ChevronUp className="w-4 h-4" />
+                      ) : (
+                        <ChevronDown className="w-4 h-4" />
+                      )}
+                    </button>
+
+                    {isChAdvancedOpen && (
+                      <div className="space-y-4">
                         <div className="grid grid-cols-2 gap-4">
                           <FadeSlider
                             label="Fade In"
@@ -1178,7 +1004,10 @@ const SettingsPanelContent = ({
                                   ch.id === channel.id
                                     ? {
                                         ...ch,
-                                        settings: { ...ch.settings, fadeIn: v },
+                                        settings: {
+                                          ...ch.settings,
+                                          fadeIn: v,
+                                        },
                                       }
                                     : ch,
                                 ),
@@ -1222,31 +1051,40 @@ const SettingsPanelContent = ({
                             }))
                           }
                         />
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="w-full"
-                          onClick={() => openUploadModal("channel", channel.id)}
-                        >
-                          <Upload className="w-3 h-3 mr-2" /> Change Audio
-                        </Button>
-                        <Button
-                          size="sm"
-                          className="w-full bg-indigo-600 hover:bg-indigo-700 text-white"
-                          onClick={() => toggleChannelCollapse(channel.id)}
-                        >
-                          Save
-                        </Button>
                       </div>
-                    ))}
-                </div>
-              );
-            })}
-          </div>
+                    )}
+
+                    <div className="border-t border-slate-100 pt-5 space-y-3">
+                      <button
+                        className="w-full h-9 rounded-lg text-sm font-medium text-white"
+                        style={{ backgroundColor: "#2b7fff" }}
+                        onClick={() => toggleChannelCollapse(channel.id)}
+                      >
+                        Save
+                      </button>
+                      <button
+                        className="w-full h-9 text-sm font-medium text-red-500"
+                        onClick={() =>
+                          onUpdate((p) => ({
+                            ...p,
+                            globalChannels: p.globalChannels.filter(
+                              (c) => c.id !== channel.id,
+                            ),
+                          }))
+                        }
+                      >
+                        Delete Channel
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
 
-        <div id="tour-zone-inventory">
-          <div className="flex items-center justify-between mb-4">
+        <div id="tour-zone-inventory" className="flex flex-col gap-3">
+          <div className="flex items-center justify-between">
             <Label className="text-slate-500 text-xs uppercase tracking-wider font-bold">
               Zone Inventory ({project.hotspots.length})
             </Label>
@@ -1257,7 +1095,6 @@ const SettingsPanelContent = ({
               onClick={() => {
                 if (setIsCanvasHighlighted) {
                   setIsCanvasHighlighted(true);
-                  // Scroll canvas into view smoothly
                   const canvasElement =
                     document.getElementById("tour-canvas-area");
                   if (canvasElement) {
@@ -1278,29 +1115,250 @@ const SettingsPanelContent = ({
               </p>
             </div>
           ) : (
-            <div className="bg-slate-50 border rounded-lg overflow-hidden max-h-60 overflow-y-auto">
-              <div className="divide-y divide-slate-200">
-                {project.hotspots.map((h) => (
+            project.hotspots.map((h) => {
+              const isOpen = selectedHotspotId === h.id;
+              const isAdvancedOpen = advancedOpenIds.has(h.id);
+              return (
+                <div
+                  key={h.id}
+                  className="bg-white border rounded-lg shadow-sm overflow-hidden"
+                >
+                  {/* Header row */}
                   <div
-                    key={h.id}
-                    tabIndex={0}
-                    className="flex items-center gap-3 p-3 hover:bg-white hover:text-indigo-600 cursor-pointer transition-colors text-sm text-slate-700 focus-visible:bg-indigo-50 focus-visible:text-indigo-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600"
-                    onClick={() => setSelectedHotspotId(h.id)}
+                    className="flex items-center gap-3 h-12 px-3 cursor-pointer"
+                    onClick={() =>
+                      setSelectedHotspotId(isOpen ? null : h.id)
+                    }
                   >
                     <div
                       className="w-3 h-3 rounded-full shrink-0"
                       style={{ backgroundColor: h.color }}
                     />
-                    <span className="flex-1 truncate font-medium">
-                      {h.name}
-                    </span>
-                    {h.audioUrl && (
-                      <Volume2 className="w-3 h-3 text-slate-400" />
-                    )}
+                    <div
+                      className="flex-1 bg-slate-100 rounded-lg h-9 flex items-center px-3 min-w-0"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <input
+                        className="w-full bg-transparent text-sm text-slate-900 outline-none truncate"
+                        value={h.name}
+                        onChange={(e) =>
+                          onUpdate((p) => ({
+                            ...p,
+                            hotspots: p.hotspots.map((z) =>
+                              z.id === h.id
+                                ? { ...z, name: e.target.value }
+                                : z,
+                            ),
+                          }))
+                        }
+                      />
+                    </div>
+                    <button className="w-9 h-9 flex items-center justify-center shrink-0 text-slate-500">
+                      {isOpen ? (
+                        <ChevronUp className="w-4 h-4" />
+                      ) : (
+                        <ChevronDown className="w-4 h-4" />
+                      )}
+                    </button>
                   </div>
-                ))}
-              </div>
-            </div>
+
+                  {/* Expanded settings */}
+                  {isOpen && (
+                    <div className="border-t border-slate-100 px-3 pb-4 pt-4 space-y-5">
+                      <ColorPicker
+                        value={h.color}
+                        onChange={(color) =>
+                          onUpdate((p) => ({
+                            ...p,
+                            hotspots: p.hotspots.map((z) =>
+                              z.id === h.id ? { ...z, color } : z,
+                            ),
+                          }))
+                        }
+                      />
+
+                      <div className="space-y-1.5">
+                        <Label className="text-sm font-medium text-slate-900">
+                          Accessibility description
+                        </Label>
+                        <textarea
+                          className="w-full bg-slate-100 rounded-lg px-3 py-2 text-sm text-slate-500 outline-none resize-none min-h-[72px]"
+                          placeholder={`Describe this sound for blind users, e.g. "Soft violin melody representing the golden sky in the upper-right corner."`}
+                          value={h.accessibilityDescription ?? ""}
+                          onChange={(e) =>
+                            onUpdate((p) => ({
+                              ...p,
+                              hotspots: p.hotspots.map((z) =>
+                                z.id === h.id
+                                  ? {
+                                      ...z,
+                                      accessibilityDescription: e.target.value,
+                                    }
+                                  : z,
+                              ),
+                            }))
+                          }
+                        />
+                        <p className="text-xs text-slate-400">
+                          Read aloud by screen readers (VoiceOver / TalkBack)
+                          when this zone is activated.
+                        </p>
+                      </div>
+
+                      <div className="flex gap-2">
+                        <button
+                          id={h.audioUrl ? undefined : "tour-zone-upload-audio"}
+                          className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg border text-sm font-medium transition-colors"
+                          style={{
+                            borderColor: h.audioUrl ? "#bedbff" : "#e2e8f0",
+                            color: h.audioUrl ? "#2b7fff" : "#94a3b8",
+                          }}
+                          onClick={() =>
+                            h.audioUrl && toggleZonePreview(h)
+                          }
+                          disabled={!h.audioUrl}
+                        >
+                          {previewingZoneId === h.id ? (
+                            <Pause className="w-4 h-4" />
+                          ) : (
+                            <Play className="w-4 h-4" />
+                          )}
+                          Listen
+                        </button>
+                        <button
+                          id={!h.audioUrl ? "tour-zone-upload-audio" : undefined}
+                          className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg border border-black/10 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50"
+                          onClick={() =>
+                            openUploadModal("hotspot", h.id)
+                          }
+                        >
+                          <RefreshCw className="w-4 h-4" />
+                          {h.audioUrl ? "Replace" : "Upload"}
+                        </button>
+                      </div>
+
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-slate-600">
+                          Loop audio
+                        </span>
+                        <Switch
+                          checked={h.settings.loop}
+                          onCheckedChange={(c) =>
+                            onUpdate((p) => ({
+                              ...p,
+                              hotspots: p.hotspots.map((z) =>
+                                z.id === h.id
+                                  ? { ...z, settings: { ...z.settings, loop: c } }
+                                  : z,
+                              ),
+                            }))
+                          }
+                        />
+                      </div>
+
+                      <VolumeSlider
+                        value={h.settings.volume}
+                        onChange={(v) =>
+                          onUpdate((p) => ({
+                            ...p,
+                            hotspots: p.hotspots.map((z) =>
+                              z.id === h.id
+                                ? { ...z, settings: { ...z.settings, volume: v } }
+                                : z,
+                            ),
+                          }))
+                        }
+                      />
+
+                      <button
+                        className="flex items-center justify-between w-full text-sm text-slate-500 py-1"
+                        onClick={() => toggleAdvanced(h.id)}
+                      >
+                        <span>Advanced settings</span>
+                        {isAdvancedOpen ? (
+                          <ChevronUp className="w-4 h-4" />
+                        ) : (
+                          <ChevronDown className="w-4 h-4" />
+                        )}
+                      </button>
+
+                      {isAdvancedOpen && (
+                        <div className="space-y-4">
+                          <div className="grid grid-cols-2 gap-4">
+                            <FadeSlider
+                              label="Fade In"
+                              value={h.settings.fadeIn ?? 0.5}
+                              onChange={(v) =>
+                                onUpdate((p) => ({
+                                  ...p,
+                                  hotspots: p.hotspots.map((z) =>
+                                    z.id === h.id
+                                      ? { ...z, settings: { ...z.settings, fadeIn: v } }
+                                      : z,
+                                  ),
+                                }))
+                              }
+                            />
+                            <FadeSlider
+                              label="Fade Out"
+                              value={h.settings.fadeOut ?? 0.5}
+                              onChange={(v) =>
+                                onUpdate((p) => ({
+                                  ...p,
+                                  hotspots: p.hotspots.map((z) =>
+                                    z.id === h.id
+                                      ? { ...z, settings: { ...z.settings, fadeOut: v } }
+                                      : z,
+                                  ),
+                                }))
+                              }
+                            />
+                          </div>
+                          <PanSlider
+                            value={h.settings.pan}
+                            onChange={(v) =>
+                              onUpdate((p) => ({
+                                ...p,
+                                hotspots: p.hotspots.map((z) =>
+                                  z.id === h.id
+                                    ? { ...z, settings: { ...z.settings, pan: v } }
+                                    : z,
+                                ),
+                              }))
+                            }
+                          />
+                        </div>
+                      )}
+
+                      <div className="border-t border-slate-100 pt-5 space-y-3">
+                        <button
+                          id="tour-zone-done-btn"
+                          className="w-full h-9 rounded-lg text-sm font-medium text-white"
+                          style={{ backgroundColor: "#2b7fff" }}
+                          onClick={() => setSelectedHotspotId(null)}
+                        >
+                          Save
+                        </button>
+                        <button
+                          className="w-full h-9 text-sm font-medium text-red-500"
+                          onClick={() => {
+                            onUpdate((p) => ({
+                              ...p,
+                              hotspots: p.hotspots.filter(
+                                (z) => z.id !== h.id,
+                              ),
+                            }));
+                            setSelectedHotspotId(null);
+                          }}
+                        >
+                          Delete Zone
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })
           )}
         </div>
       </div>
