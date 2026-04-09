@@ -215,3 +215,22 @@ export const getPublicGallery = async (shortId: string) => {
     if (!res.ok) throw new Error("Failed to load gallery");
     return res.json();
 };
+
+export const toggleProjectPublic = async (token: string, projectId: string, isPublic: boolean) => {
+    const res = await fetch(`${BASE_URL}/projects/${projectId}`, {
+        method: 'PATCH',
+        headers: getHeaders(token),
+        body: JSON.stringify({ isPublic })
+    });
+    if (!res.ok) throw new Error("Failed to toggle project visibility");
+    return res.json();
+};
+
+export const getPublicProjects = async () => {
+    const res = await fetch(`${BASE_URL}/public/projects`, {
+        headers: { Authorization: `Bearer ${publicAnonKey}` }
+    });
+    if (!res.ok) throw new Error("Failed to load public projects");
+    const { projects } = await res.json();
+    return projects;
+};

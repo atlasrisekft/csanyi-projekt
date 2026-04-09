@@ -142,7 +142,7 @@ app.get("/projects", async (c) => {
 
   const { data, error } = await supabase
     .from("projects")
-    .select("id, data")
+    .select("id, data, is_public")
     .eq("user_id", user.id);
 
   if (error) {
@@ -150,7 +150,7 @@ app.get("/projects", async (c) => {
   }
 
   return c.json({
-    projects: data.map((p) => ({ id: p.id, ...p.data })),
+    projects: data.map((p) => ({ id: p.id, ...p.data, isPublic: p.is_public })),
   });
 });
 
@@ -166,6 +166,7 @@ app.post("/projects", async (c) => {
       id: project.id ?? undefined,
       user_id: user.id,
       data: project,
+      is_public: project.isPublic ?? false,
     });
   }
 
@@ -710,6 +711,93 @@ app.get("/public/gallery", async (c) => {
       gallery: { id: gallery.id, title: gallery.title, description: gallery.description },
       projects: projectCards.filter(Boolean),
     });
+  } catch (err) {
+    console.error(err);
+    return c.json({ error: "Internal server error" }, 500);
+  }
+});
+
+app.patch("/projects/:id", async (c) => {
+  try {
+    const { user, response } = await requireUser(c);
+    if (!user) return response;
+    const projectId = c.req.param("id");
+    const { isPublic } = await c.req.json();
+    if (typeof isPublic !== "boolean") return c.json({ error: "isPublic must be boolean" }, 400);
+    const supabase = getSupabaseAdmin();
+    const { data: existing } = await supabase
+      .from("projects")
+      .select("id")
+      .eq("id", projectId)
+      .eq("user_id", user.id)
+      .single();
+    if (!existing) return c.json({ error: "Not found" }, 404);
+    const { error: updateError } = await supabase
+      .from("projects")
+      .update({ is_public: isPublic })
+      .eq("id", projectId);
+    if (updateError) return c.json({ error: updateError.message }, 500);
+    let shareShortId: string | null = null;
+    if (isPublic) {
+      const { data: existingShare } = await supabase
+        .from("project_shares")
+        .select("short_id")
+        .eq("project_id", projectId)
+        .eq("is_active", true)
+        .single();
+      if (existingShare) {
+        shareShortId = existingShare.short_id;
+      } else {
+        const newShortId = crypto.randomUUID().slice(0, 10);
+        await supabase.from("project_shares").insert({
+          short_id: newShortId,
+          project_id: projectId,
+          is_active: true,
+        });
+        shareShortId = newShortId;
+      }
+    }
+    return c.json({ success: true, shareShortId });
+  } catch (err) {
+    console.error(err);
+    return c.json({ error: "Internal server error" }, 500);
+  }
+});
+
+app.get("/public/projects", async (c) => {
+  try {
+    const supabase = getSupabaseAdmin();
+    const { data: publicProjects, error } = await supabase
+      .from("projects")
+      .select("id, data, is_public")
+      .eq("is_public", true);
+    if (error) return c.json({ error: error.message }, 500);
+    const projectCards = await Promise.all(
+      (publicProjects ?? []).map(async (row) => {
+        const d = row.data as any;
+        let imageUrl: string | null = null;
+        if (d.imagePath) {
+          const { data: signed } = await supabase.storage
+            .from(BUCKET_NAME)
+            .createSignedUrl(d.imagePath, 7200);
+          imageUrl = signed?.signedUrl ?? null;
+        }
+        const { data: share } = await supabase
+          .from("project_shares")
+          .select("short_id")
+          .eq("project_id", row.id)
+          .eq("is_active", true)
+          .single();
+        return {
+          projectId: row.id,
+          title: d.title ?? "Untitled",
+          imageUrl,
+          hotspotCount: (d.hotspots ?? []).length,
+          shareShortId: share?.short_id ?? null,
+        };
+      })
+    );
+    return c.json({ projects: projectCards });
   } catch (err) {
     console.error(err);
     return c.json({ error: "Internal server error" }, 500);

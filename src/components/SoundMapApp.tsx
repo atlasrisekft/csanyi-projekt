@@ -66,12 +66,15 @@ import {
   updateGallery,
   deleteGallery,
   getPublicGallery,
+  toggleProjectPublic,
+  getPublicProjects,
 } from "../utils/api";
 import { CuratorGalleriesView } from "./CuratorGalleriesView";
 import type { CuratorGallery } from "./CuratorGalleriesView";
 import { CuratorGalleryEditorView } from "./CuratorGalleryEditorView";
 import { PublicGalleryView } from "./PublicGalleryView";
-import type { PublicGalleryData } from "./PublicGalleryView";
+import type { PublicGalleryData, PublicGalleryProject } from "./PublicGalleryView";
+import { RootGalleryView } from "./RootGalleryView";
 import { Card, CardContent } from "./ui/card";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
@@ -163,6 +166,7 @@ export type Project = {
   introAudioLoop: boolean;
   introAudioAccessibilityDescription?: string;
   createdAt: number;
+  isPublic?: boolean;
 };
 
 type ViewMode = "gallery" | "editor" | "player" | "profile" | "curator-galleries" | "curator-gallery-editor";
@@ -1654,6 +1658,18 @@ export const SoundMapApp = () => {
   const [isLoadingGalleries, setIsLoadingGalleries] = useState(false);
   const [currentGalleryId, setCurrentGalleryId] = useState<string | null>(null);
 
+  // Root Public Gallery State
+  const [isRootGalleryView, setIsRootGalleryView] = useState(() => {
+    if (typeof window !== "undefined") {
+      const path = window.location.pathname;
+      return !(/^\/s\/.+/.test(path)) && !(/^\/g\/.+/.test(path));
+    }
+    return true;
+  });
+  const [rootGalleryProjects, setRootGalleryProjects] = useState<PublicGalleryProject[]>([]);
+  const [isLoadingRootGallery, setIsLoadingRootGallery] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+
   useEffect(() => {
     if (isSharedView) {
       const path = window.location.pathname;
@@ -1688,6 +1704,15 @@ export const SoundMapApp = () => {
       setPublicGalleryError("Invalid gallery link.");
     }
   }, [isPublicGalleryView]);
+
+  useEffect(() => {
+    if (!isRootGalleryView) return;
+    setIsLoadingRootGallery(true);
+    getPublicProjects()
+      .then(setRootGalleryProjects)
+      .catch((err) => console.error("Failed to load public projects:", err))
+      .finally(() => setIsLoadingRootGallery(false));
+  }, [isRootGalleryView]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -2092,6 +2117,21 @@ export const SoundMapApp = () => {
     }
   };
 
+  const handleTogglePublic = async (projectId: string, isPublic: boolean) => {
+    setProjects((prev) =>
+      prev.map((p) => (p.id === projectId ? { ...p, isPublic } : p))
+    );
+    try {
+      await toggleProjectPublic(session.access_token, projectId, isPublic);
+      toast.success(isPublic ? "Project is now public" : "Project is now private");
+    } catch {
+      setProjects((prev) =>
+        prev.map((p) => (p.id === projectId ? { ...p, isPublic: !isPublic } : p))
+      );
+      toast.error("Failed to update visibility");
+    }
+  };
+
   const handleShare = () => {
     if (showOnboarding && tourStepIndex === 9) {
       // Move to final step
@@ -2160,8 +2200,49 @@ export const SoundMapApp = () => {
     );
   }
 
-  if (!session) {
-    return <AuthView onLoginSuccess={() => {}} />;
+  if (isRootGalleryView) {
+    if (selectedGalleryProject) {
+      return (
+        <PlayerView
+          project={selectedGalleryProject}
+          onBack={() => setSelectedGalleryProject(null)}
+          isShared={true}
+        />
+      );
+    }
+    return (
+      <>
+        <RootGalleryView
+          projects={rootGalleryProjects}
+          isLoading={isLoadingRootGallery}
+          session={session}
+          onOpenProject={(shareShortId) => {
+            setIsLoadingGalleryProject(true);
+            getSharedProject(shareShortId)
+              .then((p: Project) => setSelectedGalleryProject(p))
+              .catch(() => toast.error("Failed to load this sound map"))
+              .finally(() => setIsLoadingGalleryProject(false));
+          }}
+          isLoadingProject={isLoadingGalleryProject}
+          onLoginClick={() => setShowAuthModal(true)}
+          onMyProjectsClick={() => setIsRootGalleryView(false)}
+        />
+        {showAuthModal && (
+          <div
+            className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm"
+            onClick={() => setShowAuthModal(false)}
+          >
+            <div onClick={(e) => e.stopPropagation()}>
+              <AuthView
+                onLoginSuccess={() => {
+                  setShowAuthModal(false);
+                }}
+              />
+            </div>
+          </div>
+        )}
+      </>
+    );
   }
 
   if (view === "profile") {
@@ -2200,6 +2281,7 @@ export const SoundMapApp = () => {
           onManageGalleries={() => setView("curator-galleries")}
           isLoading={isLoadingProjects}
           session={session}
+          onTogglePublic={handleTogglePublic}
         />
       )}
       {view === "curator-galleries" && (
@@ -2358,6 +2440,7 @@ const GalleryView = ({
   onManageGalleries,
   isLoading,
   session,
+  onTogglePublic,
 }: {
   projects: Project[];
   onCreate: () => void;
@@ -2367,6 +2450,7 @@ const GalleryView = ({
   onManageGalleries: () => void;
   isLoading: boolean;
   session: any;
+  onTogglePublic: (projectId: string, isPublic: boolean) => void;
 }) => {
   return (
     <div className="min-h-screen bg-slate-50 p-8">
@@ -2449,6 +2533,20 @@ const GalleryView = ({
                         {project.hotspots.length} zones •{" "}
                         {project.globalChannels?.length || 0} channels
                       </p>
+                    </div>
+                    <div
+                      className="flex items-center gap-2 shrink-0 ml-2"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <span className="text-xs text-slate-400">
+                        {project.isPublic ? "Public" : "Private"}
+                      </span>
+                      <Switch
+                        checked={project.isPublic ?? false}
+                        onCheckedChange={(checked) =>
+                          onTogglePublic(project.id, checked)
+                        }
+                      />
                     </div>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
