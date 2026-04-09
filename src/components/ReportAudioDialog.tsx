@@ -29,16 +29,16 @@ export const ReportAudioDialog = ({
   const [submitted, setSubmitted] = useState(false);
 
   const reasons = [
-    'Inappropriate content',
-    'Copyright violation',
-    'Spam or misleading',
-    'Privacy violation',
-    'Other safety concern',
+    'Nem megfelelő tartalom',
+    'Szerzői jogi jogsértés',
+    'Spam vagy félrevezető tartalom',
+    'Adatvédelmi jogsértés',
+    'Egyéb biztonsági aggály',
   ];
 
   const handleSubmit = async () => {
     if (!selectedReason) {
-      toast.error('Please select a reason');
+      toast.error('Kérjük, válassz egy okot');
       return;
     }
 
@@ -62,18 +62,18 @@ export const ReportAudioDialog = ({
 
       if (response.ok) {
         setSubmitted(true);
-        toast.success('Report submitted successfully');
+        toast.success('A bejelentés sikeresen elküldve');
         setTimeout(() => {
           onOpenChange(false);
           setSubmitted(false);
           setSelectedReason('');
         }, 2000);
       } else {
-        toast.error('Failed to submit report');
+        toast.error('Nem sikerült elküldeni a bejelentést');
       }
     } catch (error) {
       console.error('Report submission error:', error);
-      toast.error('An error occurred while submitting the report');
+      toast.error('Hiba történt a bejelentés elküldése közben');
     } finally {
       setIsSubmitting(false);
     }
@@ -87,17 +87,17 @@ export const ReportAudioDialog = ({
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <Flag className="w-5 h-5 text-red-600" />
-                Report Audio
+                Hang bejelentése
               </DialogTitle>
               <DialogDescription>
-                Help us keep the platform safe by reporting inappropriate or harmful content.
-                Your report is anonymous.
+                Segíts megőrizni a platform biztonságát a nem megfelelő vagy káros tartalmak bejelentésével.
+                A bejelentésed névtelen.
               </DialogDescription>
             </DialogHeader>
 
             <div className="space-y-2 py-4">
               <p className="text-sm font-medium text-slate-700 mb-3">
-                Why are you reporting this audio?
+                Miért jelented be ezt a hangot?
               </p>
               {reasons.map((reason) => (
                 <button
@@ -121,14 +121,14 @@ export const ReportAudioDialog = ({
                 disabled={isSubmitting}
                 className="flex-1 sm:flex-1"
               >
-                Cancel
+                Mégse
               </Button>
               <Button
                 onClick={handleSubmit}
                 disabled={!selectedReason || isSubmitting}
                 className="bg-red-600 hover:bg-red-700 text-white flex-1 sm:flex-1"
               >
-                {isSubmitting ? 'Submitting...' : 'Submit Report'}
+                {isSubmitting ? 'Küldés...' : 'Bejelentés elküldése'}
               </Button>
             </DialogFooter>
           </>
@@ -137,9 +137,9 @@ export const ReportAudioDialog = ({
             <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mb-4">
               <Check className="w-8 h-8 text-green-600" />
             </div>
-            <DialogTitle className="mb-2">Report Submitted</DialogTitle>
+            <DialogTitle className="mb-2">Bejelentés elküldve</DialogTitle>
             <DialogDescription>
-              Thank you for helping keep our community safe.
+              Köszönjük, hogy segítesz megőrizni közösségünk biztonságát.
             </DialogDescription>
           </div>
         )}

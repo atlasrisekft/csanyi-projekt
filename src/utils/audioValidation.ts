@@ -40,7 +40,7 @@ export const validateFileType = (file: File): ValidationResult => {
   if (!isAllowedFormat(mimeType)) {
     return {
       isValid: false,
-      error: `Unsupported format. Only MP3, M4A (AAC), and OGG files are allowed.`,
+      error: `Nem támogatott formátum. Csak MP3, M4A (AAC) és OGG fájlok engedélyezettek.`,
     };
   }
   
@@ -59,7 +59,7 @@ export const validateFileSize = (
     const limitMB = limit / (1024 * 1024);
     return {
       isValid: false,
-      error: `File size exceeds ${limitMB} MB limit for ${isRecording ? 'recordings' : 'uploads'}.`,
+      error: `A fájl mérete meghaladja a ${limitMB} MB-os korlátot ${isRecording ? 'felvételekhez' : 'feltöltésekhez'}.`,
     };
   }
   
@@ -86,7 +86,7 @@ export const validateAudioDuration = async (
         const limitMins = Math.floor(limit / 60);
         resolve({
           isValid: false,
-          error: `Audio duration exceeds ${limitMins} minute limit for ${isRecording ? 'recordings' : 'uploads'}.`,
+          error: `A hang időtartama meghaladja a ${limitMins} perces korlátot ${isRecording ? 'felvételekhez' : 'feltöltésekhez'}.`,
         });
       } else {
         resolve({ isValid: true });
@@ -97,7 +97,7 @@ export const validateAudioDuration = async (
       URL.revokeObjectURL(url);
       resolve({
         isValid: false,
-        error: 'Unable to validate audio duration. File may be corrupted.',
+        error: 'Nem sikerült ellenőrizni a hang időtartamát. A fájl sérült lehet.',
       });
     };
     
@@ -116,7 +116,7 @@ export const validateAudioChannels = async (
     if (audioBuffer.numberOfChannels > LIMITS.VOICE_RECORDING.CHANNELS) {
       return {
         isValid: false,
-        error: 'Voice recordings must be mono (single channel).',
+        error: 'A hangfelvételeknek monónak (egycsatornásnak) kell lenniük.',
       };
     }
     
@@ -124,7 +124,7 @@ export const validateAudioChannels = async (
   } catch (error) {
     return {
       isValid: false,
-      error: 'Unable to validate audio channels. File may be corrupted.',
+      error: 'Nem sikerült ellenőrizni a hangcsatornákat. A fájl sérült lehet.',
     };
   }
 };

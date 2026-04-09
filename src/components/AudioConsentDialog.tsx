@@ -33,36 +33,36 @@ export const AudioConsentDialog = ({
           </div>
           <AlertDialogHeader className="space-y-3">
             <AlertDialogTitle className="text-2xl font-semibold text-slate-900">
-              Audio Upload Consent
+              Hangfeltöltési hozzájárulás
             </AlertDialogTitle>
             <AlertDialogDescription className="text-sm text-slate-600 leading-relaxed text-left space-y-3">
               <p>
-                Before saving this audio, please confirm that:
+                A hang mentése előtt kérjük, erősítsd meg, hogy:
               </p>
               <ul className="list-disc list-inside space-y-2 pl-2">
-                <li>You have the legal right to upload and share this audio recording</li>
-                <li>You understand this audio may contain personal data</li>
-                <li>You acknowledge that you are responsible for the content you upload</li>
-                <li>You have obtained necessary permissions if the audio contains other people's voices</li>
+                <li>Jogszerűen feltöltheted és megoszthatod ezt a hangfelvételt</li>
+                <li>Tudatában vagy, hogy a hang személyes adatokat tartalmazhat</li>
+                <li>Elfogadod, hogy felelős vagy az általad feltöltött tartalomért</li>
+                <li>Megszereztél minden szükséges engedélyt, ha a hang más személyek hangját tartalmazza</li>
               </ul>
               <p className="text-xs text-slate-500 pt-2">
-                By continuing, you agree to our{' '}
+                A folytatással elfogadod a{' '}
                 <a
                   href="/terms"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-indigo-600 hover:underline"
                 >
-                  Terms of Service
+                  Felhasználási feltételeket
                 </a>{' '}
-                and{' '}
+                és az{' '}
                 <a
                   href="/privacy"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-indigo-600 hover:underline"
                 >
-                  Privacy Policy
+                  Adatvédelmi irányelveket
                 </a>
                 .
               </p>
@@ -71,13 +71,13 @@ export const AudioConsentDialog = ({
         </div>
         <AlertDialogFooter className="mt-2 flex flex-col-reverse sm:flex-row gap-2 sm:gap-2">
           <AlertDialogCancel onClick={onCancel} className="flex-1 sm:flex-1">
-            Cancel
+            Mégse
           </AlertDialogCancel>
           <AlertDialogAction
             onClick={onConfirm}
             className="bg-indigo-600 hover:bg-indigo-700 text-white flex-1 sm:flex-1"
           >
-            I Agree
+            Elfogadom
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

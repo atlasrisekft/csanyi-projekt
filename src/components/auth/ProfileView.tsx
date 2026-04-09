@@ -43,13 +43,13 @@ export const ProfileView = ({ onBack, onSignOut, onShowOnboarding }: { onBack: (
             const result = await response.json();
 
             if (!response.ok) {
-                throw new Error(result.error || "Invitation failed");
+                throw new Error(result.error || "A meghívó küldése sikertelen");
             }
 
-            setInviteStatus({ type: 'success', message: "Invitation sent successfully!" });
+            setInviteStatus({ type: 'success', message: "A meghívó sikeresen elküldve!" });
             setInviteEmail("");
         } catch (err: any) {
-            setInviteStatus({ type: 'error', message: err.message || "Failed to send invitation" });
+            setInviteStatus({ type: 'error', message: err.message || "Nem sikerült elküldeni a meghívót" });
         } finally {
             setIsInviting(false);
         }
@@ -60,13 +60,13 @@ export const ProfileView = ({ onBack, onSignOut, onShowOnboarding }: { onBack: (
         onSignOut();
     };
 
-    if (!user) return <div className="p-8 text-center">Loading profile...</div>;
+    if (!user) return <div className="p-8 text-center">Profil betöltése...</div>;
 
     return (
         <div className="min-h-screen bg-slate-50 p-4 sm:p-8">
             <div className="max-w-2xl mx-auto space-y-6">
                 <Button variant="ghost" onClick={onBack} className="mb-4 pl-0 hover:bg-transparent hover:text-indigo-600">
-                    <ArrowLeft className="w-4 h-4 mr-2" /> Back to Gallery
+                    <ArrowLeft className="w-4 h-4 mr-2" /> Vissza a galériához
                 </Button>
 
                 <Card>
@@ -77,12 +77,12 @@ export const ProfileView = ({ onBack, onSignOut, onShowOnboarding }: { onBack: (
                                     <User className="w-8 h-8" />
                                 </div>
                                 <div>
-                                    <CardTitle>{user.user_metadata?.full_name || "User"}</CardTitle>
+                                    <CardTitle>{user.user_metadata?.full_name || "Felhasználó"}</CardTitle>
                                     <CardDescription>{user.email}</CardDescription>
                                 </div>
                             </div>
                             <Button variant="destructive" onClick={handleSignOut}>
-                                <LogOut className="w-4 h-4 mr-2" /> Sign Out
+                                <LogOut className="w-4 h-4 mr-2" /> Kijelentkezés
                             </Button>
                         </div>
                     </CardHeader>
@@ -90,11 +90,11 @@ export const ProfileView = ({ onBack, onSignOut, onShowOnboarding }: { onBack: (
                         <CardContent className="border-t pt-6">
                              <div className="flex items-center justify-between">
                                 <div className="space-y-1">
-                                    <h4 className="text-sm font-medium">App Tutorial</h4>
-                                    <p className="text-sm text-slate-500">Replay the onboarding tour to learn how to use the app.</p>
+                                    <h4 className="text-sm font-medium">Alkalmazás bemutató</h4>
+                                    <p className="text-sm text-slate-500">Játszd le újra az ismertetőt az alkalmazás használatának megismeréséhez.</p>
                                 </div>
                                 <Button variant="outline" onClick={onShowOnboarding}>
-                                    <HelpCircle className="w-4 h-4 mr-2" /> View Tutorial
+                                    <HelpCircle className="w-4 h-4 mr-2" /> Bemutató megtekintése
                                 </Button>
                              </div>
                         </CardContent>
@@ -105,9 +105,9 @@ export const ProfileView = ({ onBack, onSignOut, onShowOnboarding }: { onBack: (
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                             <Shield className="w-5 h-5 text-indigo-600" />
-                            Admin Controls
+                            Adminisztrátori vezérlők
                         </CardTitle>
-                        <CardDescription>Invite new members to join the workspace.</CardDescription>
+                        <CardDescription>Hívj meg új tagokat a munkaterületre.</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <form onSubmit={handleInvite} className="space-y-4">
@@ -120,7 +120,7 @@ export const ProfileView = ({ onBack, onSignOut, onShowOnboarding }: { onBack: (
                             
                             <div className="flex gap-3">
                                 <div className="flex-1">
-                                    <Label htmlFor="invite-email" className="sr-only">Email address</Label>
+                                    <Label htmlFor="invite-email" className="sr-only">Email cím</Label>
                                     <div className="relative">
                                         <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                                         <Input 
@@ -135,11 +135,11 @@ export const ProfileView = ({ onBack, onSignOut, onShowOnboarding }: { onBack: (
                                     </div>
                                 </div>
                                 <Button type="submit" disabled={isInviting} className="bg-indigo-600 hover:bg-indigo-700 text-white">
-                                    {isInviting ? "Sending..." : "Send Invite"}
+                                    {isInviting ? "Küldés..." : "Meghívó küldése"}
                                 </Button>
                             </div>
                             <p className="text-xs text-slate-500">
-                                An email invitation will be sent to this address. They will be able to sign up and access the shared projects.
+                                Erre a címre meghívót küldünk. A meghívott személy regisztrálhat és hozzáférhet a megosztott projektekhez.
                             </p>
                         </form>
                     </CardContent>

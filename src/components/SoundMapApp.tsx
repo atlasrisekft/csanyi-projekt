@@ -26,6 +26,7 @@ import {
   AlertTriangle,
   RefreshCw,
 } from "lucide-react";
+import { useAccessiblePlayer } from "@/hooks/useAccessiblePlayer";
 import { AuthView, supabase } from "./auth/AuthView";
 import { ProfileView } from "./auth/ProfileView";
 import { InteractiveTour, TourStep } from "./InteractiveTour";
@@ -181,7 +182,7 @@ const VolumeSlider = ({
   <div className="space-y-3">
     <div className="flex justify-between text-xs text-slate-500 font-medium">
       <span className="flex items-center gap-1.5">
-        <Volume2 className="w-3.5 h-3.5" /> Volume
+        <Volume2 className="w-3.5 h-3.5" /> Hangerő
       </span>
       <span>{Math.round(value * 100)}%</span>
     </div>
@@ -205,7 +206,7 @@ const PanSlider = ({
   <div className="space-y-3">
     <div className="flex justify-between text-xs text-slate-500 font-medium">
       <span className="flex items-center gap-1.5">
-        <MoveHorizontal className="w-3.5 h-3.5" /> Panning
+        <MoveHorizontal className="w-3.5 h-3.5" /> Panoráma
       </span>
       <span className="font-mono">
         {value === 0
@@ -303,7 +304,7 @@ const ColorPicker = ({
   const hue = hueFromHex(value);
   return (
     <div className="space-y-2">
-      <p className="text-sm text-slate-500">Zone colour</p>
+      <p className="text-sm text-slate-500">Zóna színe</p>
       <div
         className="relative h-4 rounded-full"
         style={{
@@ -569,7 +570,7 @@ const ShareDialogContent = ({
     <div className="flex items-center space-x-2 mt-4">
       <div className="grid flex-1 gap-2">
         <label htmlFor="link" className="sr-only">
-          Link
+          Hivatkozás
         </label>
         <input
           id="link"
@@ -598,12 +599,12 @@ const ShareDialogContent = ({
         {copied ? (
           <>
             <Check className="h-4 w-4" />
-            <span className="text-xs">Copied</span>
+            <span className="text-xs">Másolva</span>
           </>
         ) : (
           <>
             <Copy className="h-4 w-4" />
-            <span className="sr-only">Copy</span>
+            <span className="sr-only">Másolás</span>
           </>
         )}
       </Button>
@@ -680,11 +681,11 @@ const SettingsPanelContent = ({
   return (
     <div className="p-6 space-y-8">
       <div>
-        <h2 className="font-bold text-lg mb-4">Project Settings</h2>
+        <h2 className="font-bold text-lg mb-4">Projekt beállítások</h2>
 
         <div className="space-y-3 mb-6" id="tour-intro-audio">
           <Label className="text-slate-500 text-xs uppercase tracking-wider font-bold">
-            Screen Narration
+            Bevezető narráció
           </Label>
 
           {!project.introAudioUrl ? (
@@ -696,10 +697,10 @@ const SettingsPanelContent = ({
                 <Plus className="w-5 h-5" />
               </div>
               <p className="text-sm font-medium text-slate-600">
-                Add Narration
+                Narráció hozzáadása
               </p>
               <p className="text-xs text-slate-400 mt-1">
-                Introduce your sound map with audio
+                Vezess be a hangtérképedbe hanganyaggal
               </p>
             </div>
           ) : (
@@ -715,7 +716,7 @@ const SettingsPanelContent = ({
                 >
                   <input
                     className="w-full bg-transparent text-sm text-slate-900 outline-none truncate"
-                    value={project.introAudioFile?.name || "Narration"}
+                    value={project.introAudioFile?.name || "Narráció"}
                     onChange={(e) =>
                       onUpdate((p) => ({
                         ...p,
@@ -741,11 +742,12 @@ const SettingsPanelContent = ({
                 <div className="border-t border-slate-100 px-3 pb-4 pt-4 space-y-5">
                   <div className="space-y-2">
                     <Label className="text-sm font-medium text-slate-900">
-                      Accessibility description
+                      Akadálymentesítési leírás
                     </Label>
                     <textarea
-                      className="w-full bg-slate-100 rounded-lg px-3 py-2 text-sm text-slate-500 outline-none resize-none min-h-[72px]"
-                      placeholder={`Describe this narration for blind users, e.g. "A warm voice guiding you through the sound map."`}
+                      className="w-full bg-slate-100 rounded-lg px-3 py-2 text-sm text-slate-500 outline-none resize-none"
+                      style={{ minHeight: '120px' }}
+                      placeholder={`Írd le ezt a narrációt látássérült felhasználóknak, pl. „Meleg hang, amely végigvezet a hangtérképen."`}
                       value={project.introAudioAccessibilityDescription ?? ""}
                       onChange={(e) =>
                         onUpdate((p) => ({
@@ -755,8 +757,8 @@ const SettingsPanelContent = ({
                       }
                     />
                     <p className="text-xs text-slate-400">
-                      Read aloud by screen readers (VoiceOver / TalkBack)
-                      when this narration is activated.
+                      Felolvasva képernyőolvasók által (VoiceOver / TalkBack),
+                      amikor ez a narráció aktiválódik.
                     </p>
                   </div>
 
@@ -774,14 +776,14 @@ const SettingsPanelContent = ({
                       ) : (
                         <Play className="w-4 h-4" />
                       )}
-                      Listen
+                      Meghallgatás
                     </button>
                     <button
                       className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg border border-black/10 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50"
                       onClick={() => setNarrationModalOpen(true)}
                     >
                       <RefreshCw className="w-4 h-4" />
-                      Replace
+                      Csere
                     </button>
                   </div>
 
@@ -791,7 +793,7 @@ const SettingsPanelContent = ({
                       style={{ backgroundColor: "#2b7fff" }}
                       onClick={toggleIntroAudioCollapse}
                     >
-                      Save
+                      Mentés
                     </button>
                     <button
                       className="w-full h-9 text-sm font-medium text-red-500"
@@ -812,7 +814,7 @@ const SettingsPanelContent = ({
                         }));
                       }}
                     >
-                      Delete Narration
+                      Narráció törlése
                     </button>
                   </div>
                 </div>
@@ -823,7 +825,7 @@ const SettingsPanelContent = ({
 
         <div className="mb-6 space-y-3" id="tour-add-channel">
           <Label className="text-slate-500 text-xs uppercase tracking-wider font-bold">
-            Background Channels
+            Háttércsatornák
           </Label>
 
           {(project.globalChannels || []).length === 0 && (
@@ -835,10 +837,10 @@ const SettingsPanelContent = ({
                 <Plus className="w-5 h-5" />
               </div>
               <p className="text-sm font-medium text-slate-600">
-                Add Background Audio
+                Háttérhang hozzáadása
               </p>
               <p className="text-xs text-slate-400 mt-1">
-                Rain, city noise, or ambient music
+                Eső, városzaj vagy ambient zene
               </p>
             </div>
           )}
@@ -886,13 +888,14 @@ const SettingsPanelContent = ({
                 {/* Expanded settings */}
                 {!isCollapsed && (
                   <div className="border-t border-slate-100 px-3 pb-4 pt-4 space-y-5">
-                    <div className="space-y-1.5">
+                    <div className="space-y-2">
                       <Label className="text-sm font-medium text-slate-900">
-                        Accessibility description
+                        Akadálymentesítési leírás
                       </Label>
                       <textarea
-                        className="w-full bg-slate-100 rounded-lg px-3 py-2 text-sm text-slate-500 outline-none resize-none min-h-[72px]"
-                        placeholder={`Describe this sound for blind users, e.g. "Gentle rain ambience playing throughout the experience."`}
+                        className="w-full bg-slate-100 rounded-lg px-3 py-2 text-sm text-slate-500 outline-none resize-none"
+                        style={{ minHeight: '120px' }}
+                        placeholder={`Írd le ezt a hangot látássérült felhasználóknak, pl. „Finom eső hangulata az egész élmény során."`}
                         value={channel.accessibilityDescription ?? ""}
                         onChange={(e) =>
                           onUpdate((p) => ({
@@ -909,8 +912,8 @@ const SettingsPanelContent = ({
                         }
                       />
                       <p className="text-xs text-slate-400">
-                        Read aloud by screen readers (VoiceOver / TalkBack)
-                        when this channel is activated.
+                        Felolvasva képernyőolvasók által (VoiceOver / TalkBack),
+                        amikor ez a csatorna aktiválódik.
                       </p>
                     </div>
 
@@ -931,19 +934,19 @@ const SettingsPanelContent = ({
                         ) : (
                           <Play className="w-4 h-4" />
                         )}
-                        Listen
+                        Meghallgatás
                       </button>
                       <button
                         className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg border border-black/10 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50"
                         onClick={() => openUploadModal("channel", channel.id)}
                       >
-                        <RefreshCw className="w-4 h-4" />
-                        {channel.audioUrl ? "Replace" : "Upload"}
+                        {channel.audioUrl ? <RefreshCw className="w-4 h-4" /> : <Upload className="w-4 h-4" />}
+                        {channel.audioUrl ? "Csere" : "Feltöltés"}
                       </button>
                     </div>
 
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-slate-600">Loop audio</span>
+                      <span className="text-sm text-slate-600">Hang ismétlése</span>
                       <Switch
                         checked={channel.settings.loop}
                         onCheckedChange={(c) =>
@@ -983,7 +986,7 @@ const SettingsPanelContent = ({
                       className="flex items-center justify-between w-full text-sm text-slate-500 py-1"
                       onClick={() => toggleAdvanced(channel.id)}
                     >
-                      <span>Advanced settings</span>
+                      <span>Speciális beállítások</span>
                       {isChAdvancedOpen ? (
                         <ChevronUp className="w-4 h-4" />
                       ) : (
@@ -995,7 +998,7 @@ const SettingsPanelContent = ({
                       <div className="space-y-4">
                         <div className="grid grid-cols-2 gap-4">
                           <FadeSlider
-                            label="Fade In"
+                            label="Beúsztatás"
                             value={channel.settings.fadeIn ?? 2.0}
                             onChange={(v) =>
                               onUpdate((p) => ({
@@ -1015,7 +1018,7 @@ const SettingsPanelContent = ({
                             }
                           />
                           <FadeSlider
-                            label="Fade Out"
+                            label="Kiúsztatás"
                             value={channel.settings.fadeOut ?? 2.0}
                             onChange={(v) =>
                               onUpdate((p) => ({
@@ -1060,7 +1063,7 @@ const SettingsPanelContent = ({
                         style={{ backgroundColor: "#2b7fff" }}
                         onClick={() => toggleChannelCollapse(channel.id)}
                       >
-                        Save
+                        Mentés
                       </button>
                       <button
                         className="w-full h-9 text-sm font-medium text-red-500"
@@ -1073,7 +1076,7 @@ const SettingsPanelContent = ({
                           }))
                         }
                       >
-                        Delete Channel
+                        Csatorna törlése
                       </button>
                     </div>
                   </div>
@@ -1086,7 +1089,7 @@ const SettingsPanelContent = ({
         <div id="tour-zone-inventory" className="flex flex-col gap-3">
           <div className="flex items-center justify-between">
             <Label className="text-slate-500 text-xs uppercase tracking-wider font-bold">
-              Zone Inventory ({project.hotspots.length})
+              Zóna-készlet ({project.hotspots.length})
             </Label>
           </div>
           {project.hotspots.length === 0 ? (
@@ -1109,9 +1112,9 @@ const SettingsPanelContent = ({
               <div className="mx-auto w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center mb-2 text-slate-400">
                 <Plus className="w-5 h-5" />
               </div>
-              <p className="text-sm font-medium text-slate-600">Add Zones</p>
+              <p className="text-sm font-medium text-slate-600">Zónák hozzáadása</p>
               <p className="text-xs text-slate-400 mt-1">
-                Draw on the image to create zones
+                Rajzolj a képre zónák létrehozásához
               </p>
             </div>
           ) : (
@@ -1121,7 +1124,7 @@ const SettingsPanelContent = ({
               return (
                 <div
                   key={h.id}
-                  className="bg-white border rounded-lg shadow-sm overflow-hidden"
+                  className={`bg-white border rounded-lg shadow-sm overflow-hidden ${!h.audioUrl ? 'border-red-200' : ''}`}
                 >
                   {/* Header row */}
                   <div
@@ -1165,6 +1168,38 @@ const SettingsPanelContent = ({
                   {/* Expanded settings */}
                   {isOpen && (
                     <div className="border-t border-slate-100 px-3 pb-4 pt-4 space-y-5">
+                      <div className="flex gap-2">
+                        <button
+                          id={h.audioUrl ? undefined : "tour-zone-upload-audio"}
+                          className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg border text-sm font-medium transition-colors"
+                          style={{
+                            borderColor: h.audioUrl ? "#bedbff" : "#e2e8f0",
+                            color: h.audioUrl ? "#2b7fff" : "#94a3b8",
+                          }}
+                          onClick={() => h.audioUrl && toggleZonePreview(h)}
+                          disabled={!h.audioUrl}
+                        >
+                          {previewingZoneId === h.id ? (
+                            <Pause className="w-4 h-4" />
+                          ) : (
+                            <Play className="w-4 h-4" />
+                          )}
+                          Meghallgatás
+                        </button>
+                        <button
+                          id={!h.audioUrl ? "tour-zone-upload-audio" : undefined}
+                          className={`flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-medium transition-colors ${
+                            h.audioUrl
+                              ? 'border border-black/10 text-slate-600 hover:bg-slate-50'
+                              : 'bg-indigo-600 text-white hover:bg-indigo-700'
+                          }`}
+                          onClick={() => openUploadModal("hotspot", h.id)}
+                        >
+                          {h.audioUrl ? <RefreshCw className="w-4 h-4" /> : <Upload className="w-4 h-4" />}
+                          {h.audioUrl ? "Csere" : "Feltöltés"}
+                        </button>
+                      </div>
+
                       <ColorPicker
                         value={h.color}
                         onChange={(color) =>
@@ -1177,13 +1212,14 @@ const SettingsPanelContent = ({
                         }
                       />
 
-                      <div className="space-y-1.5">
+                      <div className="space-y-2">
                         <Label className="text-sm font-medium text-slate-900">
-                          Accessibility description
+                          Akadálymentesítési leírás
                         </Label>
                         <textarea
-                          className="w-full bg-slate-100 rounded-lg px-3 py-2 text-sm text-slate-500 outline-none resize-none min-h-[72px]"
-                          placeholder={`Describe this sound for blind users, e.g. "Soft violin melody representing the golden sky in the upper-right corner."`}
+                          className="w-full bg-slate-100 rounded-lg px-3 py-2 text-sm text-slate-500 outline-none resize-none"
+                          style={{ minHeight: '120px' }}
+                          placeholder={`Írd le ezt a hangot látássérült felhasználóknak, pl. „Lágy hegedűdallam, amely a jobb felső sarokban lévő arany eget jelképezi."`}
                           value={h.accessibilityDescription ?? ""}
                           onChange={(e) =>
                             onUpdate((p) => ({
@@ -1200,46 +1236,14 @@ const SettingsPanelContent = ({
                           }
                         />
                         <p className="text-xs text-slate-400">
-                          Read aloud by screen readers (VoiceOver / TalkBack)
-                          when this zone is activated.
+                          Felolvasva képernyőolvasók által (VoiceOver / TalkBack),
+                          amikor ez a zóna aktiválódik.
                         </p>
-                      </div>
-
-                      <div className="flex gap-2">
-                        <button
-                          id={h.audioUrl ? undefined : "tour-zone-upload-audio"}
-                          className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg border text-sm font-medium transition-colors"
-                          style={{
-                            borderColor: h.audioUrl ? "#bedbff" : "#e2e8f0",
-                            color: h.audioUrl ? "#2b7fff" : "#94a3b8",
-                          }}
-                          onClick={() =>
-                            h.audioUrl && toggleZonePreview(h)
-                          }
-                          disabled={!h.audioUrl}
-                        >
-                          {previewingZoneId === h.id ? (
-                            <Pause className="w-4 h-4" />
-                          ) : (
-                            <Play className="w-4 h-4" />
-                          )}
-                          Listen
-                        </button>
-                        <button
-                          id={!h.audioUrl ? "tour-zone-upload-audio" : undefined}
-                          className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg border border-black/10 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50"
-                          onClick={() =>
-                            openUploadModal("hotspot", h.id)
-                          }
-                        >
-                          <RefreshCw className="w-4 h-4" />
-                          {h.audioUrl ? "Replace" : "Upload"}
-                        </button>
                       </div>
 
                       <div className="flex items-center justify-between">
                         <span className="text-sm text-slate-600">
-                          Loop audio
+                          Hang ismétlése
                         </span>
                         <Switch
                           checked={h.settings.loop}
@@ -1274,7 +1278,7 @@ const SettingsPanelContent = ({
                         className="flex items-center justify-between w-full text-sm text-slate-500 py-1"
                         onClick={() => toggleAdvanced(h.id)}
                       >
-                        <span>Advanced settings</span>
+                        <span>Speciális beállítások</span>
                         {isAdvancedOpen ? (
                           <ChevronUp className="w-4 h-4" />
                         ) : (
@@ -1286,7 +1290,7 @@ const SettingsPanelContent = ({
                         <div className="space-y-4">
                           <div className="grid grid-cols-2 gap-4">
                             <FadeSlider
-                              label="Fade In"
+                              label="Beúsztatás"
                               value={h.settings.fadeIn ?? 0.5}
                               onChange={(v) =>
                                 onUpdate((p) => ({
@@ -1300,7 +1304,7 @@ const SettingsPanelContent = ({
                               }
                             />
                             <FadeSlider
-                              label="Fade Out"
+                              label="Kiúsztatás"
                               value={h.settings.fadeOut ?? 0.5}
                               onChange={(v) =>
                                 onUpdate((p) => ({
@@ -1337,7 +1341,7 @@ const SettingsPanelContent = ({
                           style={{ backgroundColor: "#2b7fff" }}
                           onClick={() => setSelectedHotspotId(null)}
                         >
-                          Save
+                          Mentés
                         </button>
                         <button
                           className="w-full h-9 text-sm font-medium text-red-500"
@@ -1351,7 +1355,7 @@ const SettingsPanelContent = ({
                             setSelectedHotspotId(null);
                           }}
                         >
-                          Delete Zone
+                          Zóna törlése
                         </button>
                       </div>
                     </div>
@@ -1462,80 +1466,80 @@ const TOUR_STEPS: TourStep[] = [
   {
     id: "create-project",
     targetId: "tour-create-project",
-    title: "Start a Project",
-    description: "Click here to create your first sound map project.",
+    title: "Projekt indítása",
+    description: "Kattints ide az első hangtérkép-projekted létrehozásához.",
     placement: "right",
   },
   {
     id: "upload-image",
     targetId: "tour-upload-image",
-    title: "Upload Your Base Image",
+    title: "Alaplép feltöltése",
     description:
-      "Upload the image you want to make interactive. This could be a floorplan, a map, artwork, or any image where you want to create audio zones.",
+      "Töltsd fel azt a képet, amelyet interaktívvá szeretnél tenni. Ez lehet alaprajz, térkép, műalkotás vagy bármilyen kép, amelyre hangzónákat szeretnél helyezni.",
     placement: "bottom",
   },
   {
     id: "draw-zones",
     targetId: "tour-canvas-area",
-    title: "Draw Audio Zones",
+    title: "Hangzónák rajzolása",
     description:
-      "Click on your image to draw polygons around areas you want to make interactive. Each zone can have its own audio. Click multiple points to create the shape, then click near the starting point to close it.",
+      "Kattints a képedre, hogy sokszögeket rajzolj az interaktívvá tenni kívánt területek köré. Minden zónának saját hangja lehet. Kattints több pontra az alak megrajzolásához, majd kattints a kezdőponthoz közel a lezáráshoz.",
     placement: "left",
   },
   {
     id: "zone-inventory",
     targetId: "tour-zone-inventory",
-    title: "Zone Inventory",
+    title: "Zóna-készlet",
     description:
-      "All your created zones appear here. Click on any zone to select it and configure its audio settings.",
+      "Az összes létrehozott zóna itt jelenik meg. Kattints bármelyik zónára a kijelöléséhez és a hangbeállítások megadásához.",
     placement: "top",
   },
   {
     id: "zone-upload-audio",
     targetId: "tour-zone-upload-audio",
-    title: "Add Audio to Zone",
+    title: "Hang hozzáadása a zónához",
     description:
-      'Now add an audio file to this zone. Click "Upload Audio" to choose a file from your computer or browse sounds from the library.',
+      'Most adj hangfájlt ehhez a zónához. Kattints a „Hang feltöltése" gombra, hogy fájlt válassz a számítógépedről, vagy böngéssz a hangkönyvtárban.',
     placement: "left",
   },
   {
     id: "zone-done",
     targetId: "tour-zone-done-btn",
-    title: "Save Zone Settings",
+    title: "Zóna beállításainak mentése",
     description:
-      'Once you\'ve added audio and configured the zone settings, click "Done" to return to the main view.',
+      'Miután hozzáadtad a hangot és beállítottad a zóna paramétereit, kattints a „Mentés" gombra a főnézethez való visszatéréshez.',
     placement: "top",
   },
   {
     id: "intro-audio",
     targetId: "tour-intro-audio",
-    title: "Screen Narration",
+    title: "Bevezető narráció",
     description:
-      "Add a narration that plays on the start screen before users interact. This is perfect for setting context and providing instructions.",
+      "Adj hozzá narrációt, amely a kezdőképernyőn szólal meg, mielőtt a felhasználók interakcióba lépnének. Ez tökéletes a kontextus felállítására és az utasítások megadására.",
     placement: "left",
   },
   {
     id: "add-channel",
     targetId: "tour-add-channel",
-    title: "Background Audio Channels",
+    title: "Háttérhang-csatornák",
     description:
-      "Add ambient sounds or background music that plays continuously underneath your zones. Great for rain, city noise, or atmospheric music.",
+      "Adj hozzá ambient hangokat vagy háttérzenét, amely folyamatosan szól a zónák alatt. Remek esőhanghoz, városzajhoz vagy atmoszferikus zenéhez.",
     placement: "left",
   },
   {
     id: "preview",
     targetId: "tour-preview-btn",
-    title: "Preview Your Creation",
+    title: "Alkotásod előnézete",
     description:
-      "Test your interactive experience before sharing it with others.",
+      "Teszteld az interaktív élményt, mielőtt megosztanád másokkal.",
     placement: "bottom",
   },
   {
     id: "share",
     targetId: "tour-share-btn",
-    title: "Share Your Sound Map",
+    title: "Hangtérképed megosztása",
     description:
-      "Generate a shareable link to open on tablets or other devices. Users can explore by touch, making it accessible for everyone.",
+      "Hozz létre megosztható linket, amelyet tableteken vagy más eszközökön lehet megnyitni. A felhasználók érintéssel fedezhetik fel, így mindenki számára elérhető.",
     placement: "bottom",
   },
 ];
@@ -1608,11 +1612,11 @@ export const SoundMapApp = () => {
             .then(setSharedProject)
             .catch((err) => {
               console.error("Error loading shared project:", err);
-              setSharedError("Link invalid or expired.");
+              setSharedError("A link érvénytelen vagy lejárt.");
             });
         });
       } else {
-        setSharedError("Invalid link format.");
+        setSharedError("Érvénytelen link formátum.");
       }
     }
   }, [isSharedView]);
@@ -1708,7 +1712,7 @@ export const SoundMapApp = () => {
   const handleCreateProject = () => {
     const newProject: Project = {
       id: crypto.randomUUID(),
-      title: `Untitled Project ${projects.length + 1}`,
+      title: `Névtelen projekt ${projects.length + 1}`,
       imageFile: null,
       imageUrl: null,
       hotspots: [],
@@ -1776,7 +1780,7 @@ export const SoundMapApp = () => {
           id: crypto.randomUUID(),
           name:
             file.name.split(".")[0] ||
-            `Channel ${(currentProject.globalChannels || []).length + 1}`,
+            `Csatorna ${(currentProject.globalChannels || []).length + 1}`,
           audioFile: null,
           audioUrl: null,
           settings: {
@@ -1872,7 +1876,7 @@ export const SoundMapApp = () => {
             id: crypto.randomUUID(),
             name:
               sound.name ||
-              `Channel ${(currentProject.globalChannels || []).length + 1}`,
+              `Csatorna ${(currentProject.globalChannels || []).length + 1}`,
             audioFile: null,
             audioUrl: null,
             settings: {
@@ -2034,14 +2038,14 @@ export const SoundMapApp = () => {
             variant="outline"
             onClick={() => (window.location.href = window.location.pathname)}
           >
-            Return Home
+            Vissza a főoldalra
           </Button>
         </div>
       );
     if (!sharedProject)
       return (
         <div className="flex h-screen items-center justify-center text-slate-500 bg-slate-900 text-white">
-          Loading experience...
+          Betöltés...
         </div>
       );
     return (
@@ -2108,7 +2112,7 @@ export const SoundMapApp = () => {
             // Check for zones without audio
             const zonesWithoutAudio = currentProject.hotspots
               .filter((h) => !h.audioUrl)
-              .map((h, index) => h.name || `Zone ${index + 1}`);
+              .map((h, index) => h.name || `Zóna ${index + 1}`);
 
             if (zonesWithoutAudio.length > 0) {
               setMissingAudioZones(zonesWithoutAudio);
@@ -2128,7 +2132,7 @@ export const SoundMapApp = () => {
         />
       )}
       {!currentProject && view !== "gallery" && (
-        <div>Error: Project not found</div>
+        <div>Hiba: A projekt nem található</div>
       )}
 
       <SoundUploadModal
@@ -2157,12 +2161,12 @@ export const SoundMapApp = () => {
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
               <AlertTriangle className="w-5 h-5 text-amber-500" />
-              Zones Without Audio
+              Hang nélküli zónák
             </AlertDialogTitle>
             <AlertDialogDescription asChild>
               <div>
                 <p className="text-sm text-slate-500">
-                  The following zones do not have audio files attached:
+                  A következő zónákhoz nincs hangfájl csatolva:
                 </p>
                 <ul className="mt-3 space-y-1 text-sm list-none">
                   {missingAudioZones.map((zone, index) => (
@@ -2173,14 +2177,14 @@ export const SoundMapApp = () => {
                   ))}
                 </ul>
                 <p className="mt-4 text-sm text-slate-600">
-                  These zones will be visible but won't play any sound when
-                  clicked in preview mode.
+                  Ezek a zónák láthatók lesznek, de nem szólaltatnak meg hangot,
+                  ha az előnézeti módban rájuk kattintasz.
                 </p>
               </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Go Back</AlertDialogCancel>
+            <AlertDialogCancel>Vissza</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
                 setShowMissingAudioWarning(false);
@@ -2189,7 +2193,7 @@ export const SoundMapApp = () => {
               }}
               className="bg-indigo-600 hover:bg-indigo-700 text-white"
             >
-              Preview Anyway
+              Előnézet így is
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -2224,9 +2228,9 @@ const GalleryView = ({
       <div className="max-w-6xl mx-auto">
         <div className="flex items-center justify-between mb-8 gap-8">
           <div>
-            <h1 className="text-3xl font-bold text-slate-900">My Projects</h1>
+            <h1 className="text-3xl font-bold text-slate-900">Projektjeim</h1>
             <p className="text-slate-500 mt-1">
-              Select a sound map to edit or create a new one.
+              Válassz ki egy hangtérképet szerkesztéshez, vagy hozz létre egy újat.
             </p>
           </div>
           <div className="flex items-center gap-4">
@@ -2248,7 +2252,7 @@ const GalleryView = ({
               className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shrink-0 rounded-full h-12 w-12 p-0 sm:rounded-md sm:h-10 sm:w-auto sm:px-4 flex items-center justify-center"
             >
               <Plus className="w-6 h-6 sm:w-5 sm:h-5 sm:mr-2" />
-              <span className="hidden sm:inline">New Project</span>
+              <span className="hidden sm:inline">Új projekt</span>
             </Button>
           </div>
         </div>
@@ -2256,7 +2260,7 @@ const GalleryView = ({
           {isLoading ? (
             <div className="col-span-full flex flex-col items-center justify-center py-20 text-slate-500">
               <Loader2 className="w-8 h-8 animate-spin text-indigo-600 mb-4" />
-              <p>Loading projects...</p>
+              <p>Projektek betöltése...</p>
             </div>
           ) : projects.length > 0 ? (
             projects.map((project) => (
@@ -2289,8 +2293,8 @@ const GalleryView = ({
                         {project.title}
                       </h3>
                       <p className="text-xs text-slate-500 mt-1">
-                        {project.hotspots.length} zones •{" "}
-                        {project.globalChannels?.length || 0} channels
+                        {project.hotspots.length} zóna •{" "}
+                        {project.globalChannels?.length || 0} csatorna
                       </p>
                     </div>
                     <DropdownMenu>
@@ -2306,24 +2310,23 @@ const GalleryView = ({
                               className="text-red-600"
                               onSelect={(e) => e.preventDefault()}
                             >
-                              <Trash2 className="w-4 h-4 mr-2" /> Delete
+                              <Trash2 className="w-4 h-4 mr-2" /> Törlés
                             </DropdownMenuItem>
                           </AlertDialogTrigger>
                           <AlertDialogContent>
                             <AlertDialogHeader>
-                              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                              <AlertDialogTitle>Biztosan törlöd?</AlertDialogTitle>
                               <AlertDialogDescription>
-                                This will permanently delete the project "
-                                {project.title}". This action cannot be undone.
+                                Ez véglegesen törli a(z) „{project.title}" projektet. Ez a művelet nem vonható vissza.
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogCancel>Mégse</AlertDialogCancel>
                               <AlertDialogAction
                                 className="bg-red-600 hover:bg-red-700 text-white"
                                 onClick={() => onDelete(project.id)}
                               >
-                                Delete
+                                Törlés
                               </AlertDialogAction>
                             </AlertDialogFooter>
                           </AlertDialogContent>
@@ -2340,10 +2343,10 @@ const GalleryView = ({
                 <Music className="w-8 h-8 text-indigo-500" />
               </div>
               <h3 className="text-lg font-medium text-slate-900">
-                No projects yet
+                Még nincsenek projektek
               </h3>
               <Button onClick={onCreate} variant="outline" className="mt-4">
-                Create Project
+                Projekt létrehozása
               </Button>
             </div>
           )}
@@ -2672,10 +2675,10 @@ const EditorView = ({
         const actualPath = await uploadFile(session.access_token, file, path);
         // Update with the actual path returned from server
         onUpdate((prev) => ({ ...prev, imagePath: actualPath }));
-        toast.success("Image uploaded successfully");
+        toast.success("A kép sikeresen feltöltve.");
       } catch (e) {
         console.error("Image upload failed", e);
-        toast.error("Image upload failed. Please try again.");
+        toast.error("A kép feltöltése sikertelen. Kérjük, próbáld újra.");
       }
     }
   };
@@ -2730,12 +2733,13 @@ const EditorView = ({
         points: currentPoints,
         audioFile: null,
         audioUrl: null,
-        name: `Zone ${project.hotspots.length + 1}`,
+        name: `Zóna ${project.hotspots.length + 1}`,
         color: COLORS[Math.floor(Math.random() * COLORS.length)],
         settings: { volume: 1, pan: 0, loop: false, fadeIn: 0.5, fadeOut: 0.5 },
       };
       onUpdate({ ...project, hotspots: [...project.hotspots, newHotspot] });
       handleSetSelectedHotspotId(newHotspot.id);
+      openUploadModal("hotspot", newHotspot.id);
       // Auto open drawer on mobile if new hotspot created
       if (window.innerWidth < 1024) setIsDrawerOpen(true);
     }
@@ -2792,15 +2796,15 @@ const EditorView = ({
                 id="tour-share-btn"
                 onClick={onShare}
               >
-                <Share2 className="w-4 h-4 mr-2" /> Share
+                <Share2 className="w-4 h-4 mr-2" /> Megosztás
               </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Share Project</DialogTitle>
+                <DialogTitle>Projekt megosztása</DialogTitle>
                 <DialogDescription>
-                  Anyone with this link can view and play your sound map.
-                  Perfect for tablets.
+                  Bárki megtekintheti és lejátszhatja a hangtérképedet ezzel a linkkel.
+                  Tökéletes tabletekhez.
                 </DialogDescription>
               </DialogHeader>
               <ShareDialogContent session={session} project={project} />
@@ -2814,7 +2818,7 @@ const EditorView = ({
             disabled={!project.imageUrl}
           >
             <Play className="w-4 h-4 sm:mr-2" />
-            <span className="hidden sm:inline">Preview</span>
+            <span className="hidden sm:inline">Előnézet</span>
           </Button>
         </div>
       </header>
@@ -2826,7 +2830,7 @@ const EditorView = ({
             <div className="text-center" id="tour-upload-image">
               <Button asChild size="lg">
                 <label className="cursor-pointer">
-                  <Upload className="w-5 h-5 mr-2" /> Upload Image
+                  <Upload className="w-5 h-5 mr-2" /> Kép feltöltése
                   <input
                     type="file"
                     accept="image/*"
@@ -2921,7 +2925,7 @@ const EditorView = ({
                     }}
                     tabIndex={0}
                     role="button"
-                    aria-label={`Audio zone: ${h.name}`}
+                    aria-label={`Hangzóna: ${h.name}`}
                   />
                 ))}
                 {isDrawing &&
@@ -2988,14 +2992,14 @@ const EditorView = ({
                 className="shadow-xl rounded-full pointer-events-auto bg-white h-12 px-6"
               >
                 <Settings2 className="w-5 h-5 mr-2" />
-                {selectedHotspotId ? "Edit Zone" : "Settings & Layers"}
+                {selectedHotspotId ? "Zóna szerkesztése" : "Beállítások és rétegek"}
                 <ChevronUp className="w-4 h-4 ml-2 opacity-50" />
               </Button>
             </DrawerTrigger>
             <DrawerContent className="max-h-[85vh] flex flex-col">
-              <DrawerTitle className="sr-only">Project Settings</DrawerTitle>
+              <DrawerTitle className="sr-only">Projekt beállítások</DrawerTitle>
               <DrawerDescription className="sr-only">
-                Manage zones, audio, and project settings.
+                Zónák, hang és projektbeállítások kezelése.
               </DrawerDescription>
               <div className="overflow-y-auto flex-1">
                 <SettingsPanelContent
@@ -3039,12 +3043,10 @@ const EditorView = ({
             </div>
             <AlertDialogHeader className="space-y-3">
               <AlertDialogTitle className="text-2xl font-semibold text-slate-900">
-                Selection Overlaps
+                Átfedő kijelölés
               </AlertDialogTitle>
               <AlertDialogDescription className="text-sm text-slate-600 leading-relaxed">
-                This selection overlaps with an existing zone. Audio zones
-                cannot overlap with each other. Please draw your selection in a
-                different area that doesn't overlap with existing zones.
+                Ez a kijelölés átfed egy meglévő zónával. A hangzónák nem fedhetik át egymást. Kérjük, rajzold a kijelölést egy másik területre, amely nem fed át meglévő zónákkal.
               </AlertDialogDescription>
             </AlertDialogHeader>
           </div>
@@ -3053,7 +3055,7 @@ const EditorView = ({
               onClick={() => setShowOverlapWarning(false)}
               className="bg-amber-600 hover:bg-amber-700 text-white w-full sm:w-auto"
             >
-              Got it
+              Értettem
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -3076,6 +3078,8 @@ const PlayerView = ({
   isShared?: boolean;
 }) => {
   const [hasStarted, setHasStarted] = useState(false);
+  // 'idle' = waiting for first tap, 'speaking' = instructions playing, 'narrating' = intro audio playing
+  const [introPhase, setIntroPhase] = useState<'idle' | 'speaking' | 'narrating'>('idle');
   const [playingId, setPlayingId] = useState<string | null>(null);
   const engine = useAudioEngine();
   const introAudioRef = useRef<HTMLAudioElement | null>(null);
@@ -3120,27 +3124,56 @@ const PlayerView = ({
     onBack();
   };
 
-  // Auto-play intro on mount
+  // Auto-play intro audio for non-shared (sighted editor preview)
   useEffect(() => {
-    if (!hasStarted && project.introAudioUrl) {
-      const audio = new Audio(project.introAudioUrl);
-      audio.loop = project.introAudioLoop; // Use loop setting
-      introAudioRef.current = audio;
-      const playPromise = audio.play();
-      if (playPromise !== undefined) {
-        playPromise.catch((e) =>
-          console.log("Autoplay blocked by browser policy:", e),
-        );
-      }
-      return () => {
-        try {
-          audio.pause();
-        } catch (e) {
-          console.error("Error pausing intro audio:", e);
-        }
-      };
+    if (isShared || hasStarted || !project.introAudioUrl) return;
+    const audio = new Audio(project.introAudioUrl);
+    audio.loop = project.introAudioLoop;
+    introAudioRef.current = audio;
+    const playPromise = audio.play();
+    if (playPromise !== undefined) {
+      playPromise.catch((e) =>
+        console.log("Autoplay blocked by browser policy:", e),
+      );
     }
-  }, [hasStarted, project.introAudioUrl, project.introAudioLoop]);
+    return () => {
+      try { audio.pause(); } catch (e) {}
+    };
+  }, [isShared, hasStarted, project.introAudioUrl, project.introAudioLoop]);
+
+  // Accessible intro: first tap speaks instructions, then plays intro audio
+  const startAccessibleIntro = useCallback(() => {
+    if (introPhase !== 'idle') return;
+
+    const name = project.title ? `${project.title}. ` : '';
+    const instructions = `${name}Ez egy interaktív hangtérkép. A bevezetés után húzd az ujjadat a képen a felfedezéshez. Minden zóna hangot játszik le, és néhány másodperc után felolvassa a leírást. Érintsd meg a képernyőt a folytatáshoz.`;
+
+    const utterance = new SpeechSynthesisUtterance(instructions);
+    setIntroPhase('speaking');
+
+    utterance.onend = () => {
+      if (project.introAudioUrl) {
+        setIntroPhase('narrating');
+        const audio = new Audio(project.introAudioUrl);
+        introAudioRef.current = audio;
+        audio.onended = () => handleStart();
+        audio.play().catch(console.error);
+      } else {
+        handleStart();
+      }
+    };
+
+    speechSynthesis.speak(utterance);
+  }, [introPhase, project.title, project.introAudioUrl]);
+
+  const handleIntroTap = useCallback(() => {
+    if (introPhase === 'idle') {
+      startAccessibleIntro();
+    } else if (introPhase === 'narrating') {
+      handleStart();
+    }
+    // Do nothing while 'speaking' — instructions must finish first
+  }, [introPhase, startAccessibleIntro]);
 
   const playHotspot = (hotspot: Hotspot) => {
     if (!hotspot.audioUrl) return;
@@ -3167,21 +3200,55 @@ const PlayerView = ({
     }
   };
 
-  const handleTouchMove = (e: React.TouchEvent) => {
-    const touch = e.touches[0];
-    const element = document.elementFromPoint(touch.clientX, touch.clientY);
-    if (element && element.tagName === "polygon") {
-      const id = element.getAttribute("data-id");
-      if (id && id !== playingId) {
-        const hotspot = project.hotspots.find((h) => h.id === id);
-        if (hotspot) playHotspot(hotspot);
-      }
-    } else if (playingId) {
-      // If we touched outside any polygon, stop playing
+  const handleZoneEnter = useCallback((id: string) => {
+    const hotspot = project.hotspots.find((h) => h.id === id);
+    if (hotspot) playHotspot(hotspot);
+  }, [project.hotspots]);
+
+  const handleZoneLeave = useCallback(() => {
+    if (playingId) {
       engine.stop(playingId);
       setPlayingId(null);
     }
-  };
+  }, [playingId, engine]);
+
+  const { handleTouchMove, handleTouchEnd } = useAccessiblePlayer({
+    zones: project.hotspots.map((h) => ({
+      id: h.id,
+      accessibilityDescription: h.accessibilityDescription,
+    })),
+    onZoneEnter: handleZoneEnter,
+    onZoneLeave: handleZoneLeave,
+  });
+
+  if (!hasStarted && isShared) {
+    return (
+      <div
+        className="fixed inset-0 bg-slate-900 flex flex-col items-center justify-center p-6 text-center z-[100]"
+        onClick={handleIntroTap}
+        role="main"
+        aria-label={project.title || 'Interaktív hangtérkép'}
+      >
+        <span className="sr-only">
+          {introPhase === 'idle'
+            ? 'Interaktív hangtérkép. Érintsd meg a képernyőt a bevezetés meghallgatásához.'
+            : introPhase === 'speaking'
+            ? 'A bevezetés lejátszás alatt van. Kérjük, várj.'
+            : 'Érintsd meg a képernyőt a hangtérkép felfedezéséhez.'}
+        </span>
+        <div className="max-w-md w-full space-y-4 pointer-events-none" aria-hidden="true">
+          <h1 className="text-4xl font-bold text-white">{project.title || 'Hangtérkép'}</h1>
+          <p className="text-slate-400">Interaktív hangtérkép</p>
+          {introPhase === 'idle' && (
+            <p className="text-slate-500 text-sm mt-8">Érintsd meg a képernyőt a kezdéshez</p>
+          )}
+          {introPhase === 'narrating' && (
+            <p className="text-slate-500 text-sm mt-8">Érintsd meg a képernyőt a folytatáshoz</p>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   if (!hasStarted) {
     return (
@@ -3191,7 +3258,7 @@ const PlayerView = ({
             <h1 className="text-4xl font-bold text-white mb-2">
               {project.title}
             </h1>
-            <p className="text-slate-400">Interactive Sound Map</p>
+            <p className="text-slate-400">Interaktív hangtérkép</p>
           </div>
           <Button
             size="lg"
@@ -3199,17 +3266,15 @@ const PlayerView = ({
             className="w-full h-14 text-lg bg-indigo-600 hover:bg-indigo-700 text-white rounded-full shadow-xl transition-all hover:scale-105"
           >
             <Play className="w-6 h-6 mr-2 fill-current" />
-            Start Experience
+            Élmény indítása
           </Button>
-          {!isShared && (
-            <Button
-              variant="ghost"
-              className="text-slate-400 hover:text-slate-300"
-              onClick={handleBack}
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" /> Back to Editor
-            </Button>
-          )}
+          <Button
+            variant="ghost"
+            className="text-slate-400 hover:text-slate-300"
+            onClick={handleBack}
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" /> Vissza a szerkesztőbe
+          </Button>
         </div>
       </div>
     );
@@ -3225,7 +3290,7 @@ const PlayerView = ({
             onClick={handleBack}
             className="bg-black/20 text-white border-white/20 backdrop-blur-md hover:bg-black/40"
           >
-            <ArrowLeft className="w-4 h-4 mr-2" /> Back to Edit
+            <ArrowLeft className="w-4 h-4 mr-2" /> Vissza a szerkesztéshez
           </Button>
         </div>
       )}
@@ -3233,7 +3298,13 @@ const PlayerView = ({
       <div
         className="flex-1 flex items-center justify-center p-4 overflow-hidden"
         onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        role="application"
+        aria-label="Interaktív hangtérkép. Húzd az ujjadat a zónák felfedezéséhez."
       >
+        <span className="sr-only">
+          Helyezd az ujjadat a képre és húzd a felfedezéshez. A hang akkor szólal meg, amikor belépel egy zónába. Néhány másodperc után egy leírás is felolvasásra kerül.
+        </span>
         <div
           className="relative shadow-2xl select-none"
           style={{ touchAction: "none" }}

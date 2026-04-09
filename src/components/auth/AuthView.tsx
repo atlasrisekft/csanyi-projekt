@@ -41,7 +41,7 @@ export const AuthView = ({ onLoginSuccess }: { onLoginSuccess: () => void }) => 
             if (error) throw error;
             onLoginSuccess();
         } catch (err: any) {
-            setError(err.message || "Failed to sign in");
+            setError(err.message || "Nem sikerült bejelentkezni");
         } finally {
             setIsLoading(false);
         }
@@ -70,7 +70,7 @@ export const AuthView = ({ onLoginSuccess }: { onLoginSuccess: () => void }) => 
             const result = await response.json();
 
             if (!response.ok) {
-                throw new Error(result.error || "Signup failed");
+                throw new Error(result.error || "A regisztráció sikertelen");
             }
 
             // Auto login after signup
@@ -83,7 +83,7 @@ export const AuthView = ({ onLoginSuccess }: { onLoginSuccess: () => void }) => 
             onLoginSuccess();
 
         } catch (err: any) {
-            setError(err.message || "Failed to sign up");
+            setError(err.message || "Nem sikerült a regisztráció");
         } finally {
             setIsLoading(false);
         }
@@ -93,28 +93,28 @@ export const AuthView = ({ onLoginSuccess }: { onLoginSuccess: () => void }) => 
         <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
             <Card className="w-full max-w-md shadow-xl">
                 <CardHeader className="text-center">
-                    <CardTitle className="text-2xl font-bold text-indigo-600">Sound Map</CardTitle>
-                    <CardDescription>Sign in to manage your audio projects</CardDescription>
+                    <CardTitle className="text-2xl font-bold text-indigo-600">Hangtérkép</CardTitle>
+                    <CardDescription>Jelentkezz be a hangprojektjeid kezeléséhez</CardDescription>
                 </CardHeader>
                 <CardContent>
                     {error && (
                         <Alert variant="destructive" className="mb-4">
                             <AlertCircle className="h-4 w-4" />
-                            <AlertTitle>Error</AlertTitle>
+                            <AlertTitle>Hiba</AlertTitle>
                             <AlertDescription>{error}</AlertDescription>
                         </Alert>
                     )}
 
                     <Tabs defaultValue="login" className="w-full">
                         <TabsList className="grid w-full grid-cols-2 mb-4">
-                            <TabsTrigger value="login">Login</TabsTrigger>
-                            <TabsTrigger value="signup">Sign Up</TabsTrigger>
+                            <TabsTrigger value="login">Bejelentkezés</TabsTrigger>
+                            <TabsTrigger value="signup">Regisztráció</TabsTrigger>
                         </TabsList>
                         
                         <TabsContent value="login">
                             <form onSubmit={handleLogin} className="space-y-4">
                                 <div className="space-y-2">
-                                    <Label htmlFor="email">Email</Label>
+                                    <Label htmlFor="email">Email cím</Label>
                                     <Input 
                                         id="email" 
                                         type="email" 
@@ -125,7 +125,7 @@ export const AuthView = ({ onLoginSuccess }: { onLoginSuccess: () => void }) => 
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label htmlFor="password">Password</Label>
+                                    <Label htmlFor="password">Jelszó</Label>
                                     <Input 
                                         id="password" 
                                         type="password" 
@@ -136,7 +136,7 @@ export const AuthView = ({ onLoginSuccess }: { onLoginSuccess: () => void }) => 
                                 </div>
                                 <Button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700" disabled={isLoading}>
                                     {isLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-                                    Sign In
+                                    Bejelentkezés
                                 </Button>
                             </form>
                         </TabsContent>
@@ -144,17 +144,17 @@ export const AuthView = ({ onLoginSuccess }: { onLoginSuccess: () => void }) => 
                         <TabsContent value="signup">
                             <form onSubmit={handleSignup} className="space-y-4">
                                 <div className="space-y-2">
-                                    <Label htmlFor="name">Full Name</Label>
-                                    <Input 
-                                        id="name" 
-                                        placeholder="John Doe" 
+                                    <Label htmlFor="name">Teljes név</Label>
+                                    <Input
+                                        id="name"
+                                        placeholder="Kovács János"
                                         value={signupName}
                                         onChange={(e) => setSignupName(e.target.value)}
                                         required
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label htmlFor="signup-email">Email</Label>
+                                    <Label htmlFor="signup-email">Email cím</Label>
                                     <Input 
                                         id="signup-email" 
                                         type="email" 
@@ -165,7 +165,7 @@ export const AuthView = ({ onLoginSuccess }: { onLoginSuccess: () => void }) => 
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label htmlFor="signup-password">Password</Label>
+                                    <Label htmlFor="signup-password">Jelszó</Label>
                                     <Input 
                                         id="signup-password" 
                                         type="password" 
@@ -177,7 +177,7 @@ export const AuthView = ({ onLoginSuccess }: { onLoginSuccess: () => void }) => 
                                 </div>
                                 <Button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700" disabled={isLoading}>
                                     {isLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-                                    Create Account
+                                    Fiók létrehozása
                                 </Button>
                             </form>
                         </TabsContent>

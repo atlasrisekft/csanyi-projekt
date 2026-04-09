@@ -192,7 +192,7 @@ export const SoundUploadModal = ({ open, onOpenChange, onLocalUpload, onLibraryS
             // Use only preview files (low or high quality MP3/OGG), never original
             const previewUrl = sound.previews['preview-lq-mp3'] || sound.previews['preview-hq-mp3'];
             if (!previewUrl) {
-                toast.error('Preview not available for this sound');
+                toast.error('Ehhez a hanghoz nem érhető el előnézet');
                 return;
             }
             
@@ -232,14 +232,14 @@ export const SoundUploadModal = ({ open, onOpenChange, onLocalUpload, onLibraryS
             setPlayingId(null);
             
             // Fetch detailed sound info to validate preview file metadata
-            toast.loading('Validating audio file...');
+            toast.loading('Hangfájl ellenőrzése...');
             const detailResponse = await fetch(
                 `https://freesound.org/apiv2/sounds/${sound.id}/?token=${FREESOUND_API_KEY}`
             );
             
             if (!detailResponse.ok) {
                 toast.dismiss();
-                toast.error('Failed to validate audio file');
+                toast.error('Nem sikerült ellenőrizni a hangfájlt');
                 return;
             }
             
@@ -249,14 +249,14 @@ export const SoundUploadModal = ({ open, onOpenChange, onLocalUpload, onLibraryS
             const fileType = detailData.type?.toLowerCase();
             if (fileType && !['mp3', 'ogg'].includes(fileType)) {
                 toast.dismiss();
-                toast.error('This audio format is not supported. Only MP3 and OGG are allowed.');
+                toast.error('Ez a hangformátum nem támogatott. Csak MP3 és OGG engedélyezett.');
                 return;
             }
             
             // Validate duration (max 60 seconds for web suitability)
             if (detailData.duration > 60) {
                 toast.dismiss();
-                toast.error('Audio duration exceeds 60 seconds. Please select a shorter sound.');
+                toast.error('A hang időtartama meghaladja a 60 másodpercet. Kérjük, válassz rövidebb hangot.');
                 return;
             }
             
@@ -273,7 +273,7 @@ export const SoundUploadModal = ({ open, onOpenChange, onLocalUpload, onLibraryS
                         // Reject if preview exceeds 1 MB
                         if (sizeInMB > 1) {
                             toast.dismiss();
-                            toast.error(`Preview file is ${sizeInMB.toFixed(2)} MB, which exceeds the 1 MB limit.`);
+                            toast.error(`Az előnézeti fájl ${sizeInMB.toFixed(2)} MB, ami meghaladja az 1 MB-os korlátot.`);
                             return;
                         }
                     }
@@ -289,7 +289,7 @@ export const SoundUploadModal = ({ open, onOpenChange, onLocalUpload, onLibraryS
         } catch (error) {
             toast.dismiss();
             console.error('Error validating sound:', error);
-            toast.error('An error occurred while validating the audio file');
+            toast.error('Hiba történt a hangfájl ellenőrzése közben');
         }
     };
 
@@ -404,16 +404,16 @@ export const SoundUploadModal = ({ open, onOpenChange, onLocalUpload, onLibraryS
             // Handle microphone access errors gracefully
             if (error instanceof DOMException) {
                 if (error.name === 'NotAllowedError') {
-                    setRecordingError('Microphone permission denied. Please allow microphone access to record audio.');
+                    setRecordingError('A mikrofon hozzáférése megtagadva. Kérjük, engedélyezd a mikrofon használatát a felvételhez.');
                 } else if (error.name === 'NotFoundError') {
-                    setRecordingError('No microphone found. Please connect a microphone and try again.');
+                    setRecordingError('Nem található mikrofon. Csatlakoztass egy mikrofont, és próbáld újra.');
                 } else {
                     console.error('Error accessing microphone:', error);
-                    setRecordingError('Failed to access microphone. Please check your device settings.');
+                    setRecordingError('Nem sikerült elérni a mikrofont. Ellenőrizd az eszközbeállításokat.');
                 }
             } else {
                 console.error('Error accessing microphone:', error);
-                setRecordingError('An unexpected error occurred while accessing the microphone.');
+                setRecordingError('Váratlan hiba történt a mikrofon elérésekor.');
             }
         }
     };
@@ -487,8 +487,8 @@ export const SoundUploadModal = ({ open, onOpenChange, onLocalUpload, onLibraryS
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="max-w-4xl w-[90vw] h-[80vh] max-h-[700px] flex flex-col p-0">
                 <DialogHeader className="px-6 pt-6 pb-4 border-b">
-                    <DialogTitle>Upload Audio</DialogTitle>
-                    <DialogDescription>Upload audio from your computer or browse the sound library.</DialogDescription>
+                    <DialogTitle>Hang feltöltése</DialogTitle>
+                    <DialogDescription>Tölts fel hangot a számítógépedről, vagy böngéssz a hangkönyvtárban.</DialogDescription>
                 </DialogHeader>
 
                 {/* Tabs */}
@@ -502,7 +502,7 @@ export const SoundUploadModal = ({ open, onOpenChange, onLocalUpload, onLibraryS
                         }`}
                     >
                         <Upload className="w-4 h-4 inline mr-2" />
-                        Upload from Computer
+                        Feltöltés számítógépről
                     </button>
                     <button
                         onClick={() => setActiveTab('library')}
@@ -513,7 +513,7 @@ export const SoundUploadModal = ({ open, onOpenChange, onLocalUpload, onLibraryS
                         }`}
                     >
                         <Search className="w-4 h-4 inline mr-2" />
-                        Browse Sound Library
+                        Hangkönyvtár böngészése
                     </button>
                     <button
                         onClick={() => setActiveTab('record')}
@@ -524,7 +524,7 @@ export const SoundUploadModal = ({ open, onOpenChange, onLocalUpload, onLibraryS
                         }`}
                     >
                         <Mic className="w-4 h-4 inline mr-2" />
-                        Record Audio
+                        Hangfelvétel
                     </button>
                 </div>
 
@@ -537,9 +537,9 @@ export const SoundUploadModal = ({ open, onOpenChange, onLocalUpload, onLibraryS
                                     <Upload className="w-12 h-12 text-indigo-600" />
                                 </div>
                                 <div>
-                                    <h3 className="text-lg font-semibold mb-2">Upload Audio File</h3>
+                                    <h3 className="text-lg font-semibold mb-2">Hangfájl feltöltése</h3>
                                     <p className="text-sm text-slate-500 mb-4">
-                                        Select an audio file from your computer to upload
+                                        Válassz hangfájlt a számítógépedről a feltöltéshez
                                     </p>
                                 </div>
                                 <Button
@@ -548,7 +548,7 @@ export const SoundUploadModal = ({ open, onOpenChange, onLocalUpload, onLibraryS
                                     className="w-full bg-indigo-600 hover:bg-indigo-700 text-white"
                                 >
                                     <Upload className="w-4 h-4 mr-2" />
-                                    Choose File
+                                    Fájl kiválasztása
                                 </Button>
                                 <input
                                     ref={fileInputRef}
@@ -558,7 +558,7 @@ export const SoundUploadModal = ({ open, onOpenChange, onLocalUpload, onLibraryS
                                     onChange={handleLocalFileSelect}
                                 />
                                 <p className="text-xs text-slate-400">
-                                    Supports MP3, M4A (AAC), and OGG formats. Max 5 minutes, 10 MB.
+                                    Támogatott formátumok: MP3, M4A (AAC) és OGG. Maximum 5 perc, 10 MB.
                                 </p>
                             </div>
                         </div>
@@ -575,12 +575,12 @@ export const SoundUploadModal = ({ open, onOpenChange, onLocalUpload, onLibraryS
                                         
                                         <div>
                                             <h3 className="text-lg font-semibold mb-2">
-                                                {isRecording ? 'Recording...' : 'Record Audio'}
+                                                {isRecording ? 'Felvétel folyamatban...' : 'Hangfelvétel'}
                                             </h3>
                                             <p className="text-sm text-slate-500 mb-4">
-                                                {isRecording 
-                                                    ? 'Click stop when finished' 
-                                                    : 'Click the button below to start recording'}
+                                                {isRecording
+                                                    ? 'Kattints a leállításra, ha kész vagy'
+                                                    : 'Kattints az alábbi gombra a felvétel indításához'}
                                             </p>
                                         </div>
 
@@ -608,18 +608,18 @@ export const SoundUploadModal = ({ open, onOpenChange, onLocalUpload, onLibraryS
                                             {isRecording ? (
                                                 <>
                                                     <Square className="w-4 h-4 mr-2" />
-                                                    Stop Recording
+                                                    Felvétel leállítása
                                                 </>
                                             ) : (
                                                 <>
                                                     <Mic className="w-4 h-4 mr-2" />
-                                                    Start Recording
+                                                    Felvétel indítása
                                                 </>
                                             )}
                                         </Button>
 
                                         <p className="text-xs text-slate-400">
-                                            Make sure your microphone is connected and permissions are granted
+                                            Győződj meg arról, hogy a mikrofonod csatlakoztatva van és az engedélyek meg vannak adva
                                         </p>
                                     </>
                                 ) : (
@@ -629,12 +629,12 @@ export const SoundUploadModal = ({ open, onOpenChange, onLocalUpload, onLibraryS
                                         </div>
                                         
                                         <div>
-                                            <h3 className="text-lg font-semibold mb-2">Recording Complete</h3>
+                                            <h3 className="text-lg font-semibold mb-2">Felvétel kész</h3>
                                             <p className="text-sm text-slate-500 mb-2">
-                                                Duration: {formatRecordingDuration(recordingDuration)}
+                                                Időtartam: {formatRecordingDuration(recordingDuration)}
                                             </p>
                                             <p className="text-xs text-slate-400">
-                                                Preview your recording or record again
+                                                Hallgasd meg a felvételt, vagy vegyél fel újat
                                             </p>
                                         </div>
 
@@ -648,12 +648,12 @@ export const SoundUploadModal = ({ open, onOpenChange, onLocalUpload, onLibraryS
                                                 {isPlayingRecording ? (
                                                     <>
                                                         <Pause className="w-4 h-4 mr-2" />
-                                                        Pause
+                                                        Szünet
                                                     </>
                                                 ) : (
                                                     <>
                                                         <Play className="w-4 h-4 mr-2" />
-                                                        Preview
+                                                        Előnézet
                                                     </>
                                                 )}
                                             </Button>
@@ -664,7 +664,7 @@ export const SoundUploadModal = ({ open, onOpenChange, onLocalUpload, onLibraryS
                                                 className="flex-1"
                                             >
                                                 <RotateCcw className="w-4 h-4 mr-2" />
-                                                Re-record
+                                                Újrafelvétel
                                             </Button>
                                         </div>
 
@@ -674,7 +674,7 @@ export const SoundUploadModal = ({ open, onOpenChange, onLocalUpload, onLibraryS
                                             className="w-full bg-indigo-600 hover:bg-indigo-700 text-white"
                                         >
                                             <Check className="w-4 h-4 mr-2" />
-                                            Use This Recording
+                                            Felvétel használata
                                         </Button>
                                     </>
                                 )}
@@ -688,7 +688,7 @@ export const SoundUploadModal = ({ open, onOpenChange, onLocalUpload, onLibraryS
                                     <div className="relative flex-1">
                                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                                         <Input
-                                            placeholder="Search for sounds... (e.g., 'birds', 'rain', 'footsteps')"
+                                            placeholder="Hangok keresése... (pl. 'madarak', 'eső', 'lépések')"
                                             value={searchQuery}
                                             onChange={(e) => setSearchQuery(e.target.value)}
                                             onKeyDown={(e) => e.key === 'Enter' && searchSounds()}
@@ -699,7 +699,7 @@ export const SoundUploadModal = ({ open, onOpenChange, onLocalUpload, onLibraryS
                                         {isSearching ? (
                                             <Loader2 className="w-4 h-4 animate-spin" />
                                         ) : (
-                                            'Search'
+                                            'Keresés'
                                         )}
                                     </Button>
                                 </div>
@@ -712,17 +712,17 @@ export const SoundUploadModal = ({ open, onOpenChange, onLocalUpload, onLibraryS
                                         {!hasSearched ? (
                                             <div className="text-center py-12 text-slate-400">
                                                 <Search className="w-16 h-16 mx-auto mb-4 opacity-20" />
-                                                <p className="text-sm">Search for sounds from Freesound.org</p>
-                                                <p className="text-xs mt-2">Try searching for: ambient, nature, music, effects</p>
+                                                <p className="text-sm">Keress hangokat a Freesound.org könyvtárban</p>
+                                                <p className="text-xs mt-2">Próbálj rákeresni: ambient, természet, zene, effektek</p>
                                             </div>
                                         ) : isSearching ? (
                                             <div className="text-center py-12">
                                                 <Loader2 className="w-8 h-8 mx-auto animate-spin text-indigo-600 mb-4" />
-                                                <p className="text-sm text-slate-500">Searching sounds...</p>
+                                                <p className="text-sm text-slate-500">Hangok keresése...</p>
                                             </div>
                                         ) : sounds.length === 0 ? (
                                             <div className="text-center py-12 text-slate-400">
-                                                <p className="text-sm">No sounds found. Try a different search term.</p>
+                                                <p className="text-sm">Nem találtunk hangot. Próbálj más keresési kifejezést.</p>
                                             </div>
                                         ) : (
                                             <div className="space-y-2">
@@ -765,14 +765,14 @@ export const SoundUploadModal = ({ open, onOpenChange, onLocalUpload, onLibraryS
                                                             className="opacity-0 group-hover:opacity-100 transition-opacity shrink-0 bg-indigo-600 hover:bg-indigo-700 text-white"
                                                         >
                                                             <Download className="w-4 h-4 mr-2" />
-                                                            Select
+                                                            Kiválasztás
                                                         </Button>
                                                     </div>
                                                 ))}
                                                 {isLoadingMore && (
                                                     <div className="text-center py-4">
                                                         <Loader2 className="w-6 h-6 mx-auto animate-spin text-indigo-600" />
-                                                        <p className="text-xs text-slate-500 mt-2">Loading more sounds...</p>
+                                                        <p className="text-xs text-slate-500 mt-2">További hangok betöltése...</p>
                                                     </div>
                                                 )}
                                             </div>
