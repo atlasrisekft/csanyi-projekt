@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git -C \"c:\\\\Users\\\\geric\\\\Documents\\\\Geribogyó kódol\\\\csanyi-projekt\" log --oneline --all)",
+      "Bash(git -C \"c:\\\\Users\\\\geric\\\\Documents\\\\Geribogyó kódol\\\\csanyi-projekt\" log --all --oneline)",
+      "Bash(git -C \"c:\\\\Users\\\\geric\\\\Documents\\\\Geribogyó kódol\\\\csanyi-projekt\" show 1b6c1559 --stat)",
+      "Bash(git -C \"c:\\\\Users\\\\geric\\\\Documents\\\\Geribogyó kódol\\\\csanyi-projekt\" log --all --grep=\"projects\\\\|schema\\\\|database\" --oneline)"
+    ]
+  }
+}

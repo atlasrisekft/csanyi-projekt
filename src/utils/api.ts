@@ -157,3 +157,61 @@ export const saveUserPreferences = async (token: string, preferences: any) => {
     if (!res.ok) throw new Error("Failed to save preferences");
     return res.json();
 };
+
+// ---------------------------------------------------------------------------
+// CURATOR GALLERIES
+// ---------------------------------------------------------------------------
+
+export const loadGalleries = async (token: string) => {
+    const res = await fetch(`${BASE_URL}/galleries`, { headers: getHeaders(token) });
+    if (!res.ok) throw new Error("Failed to load galleries");
+    const { galleries } = await res.json();
+    return galleries;
+};
+
+export const createGallery = async (token: string, title: string, description: string, projectIds: string[]) => {
+    const res = await fetch(`${BASE_URL}/galleries`, {
+        method: 'POST',
+        headers: getHeaders(token),
+        body: JSON.stringify({ title, description, projectIds })
+    });
+    if (!res.ok) throw new Error("Failed to create gallery");
+    return res.json();
+};
+
+export const updateGallery = async (token: string, galleryId: string, updates: { title?: string; description?: string; projectIds?: string[] }) => {
+    const res = await fetch(`${BASE_URL}/galleries/${galleryId}`, {
+        method: 'PUT',
+        headers: getHeaders(token),
+        body: JSON.stringify(updates)
+    });
+    if (!res.ok) throw new Error("Failed to update gallery");
+    return res.json();
+};
+
+export const deleteGallery = async (token: string, galleryId: string) => {
+    const res = await fetch(`${BASE_URL}/galleries/${galleryId}`, {
+        method: 'DELETE',
+        headers: getHeaders(token)
+    });
+    if (!res.ok) throw new Error("Failed to delete gallery");
+    return res.json();
+};
+
+export const createGalleryShareLink = async (token: string, galleryId: string) => {
+    const res = await fetch(`${BASE_URL}/gallery-share`, {
+        method: 'POST',
+        headers: getHeaders(token),
+        body: JSON.stringify({ galleryId })
+    });
+    if (!res.ok) throw new Error("Failed to create gallery share link");
+    return res.json();
+};
+
+export const getPublicGallery = async (shortId: string) => {
+    const res = await fetch(`${BASE_URL}/public/gallery?id=${shortId}`, {
+        headers: { Authorization: `Bearer ${publicAnonKey}` }
+    });
+    if (!res.ok) throw new Error("Failed to load gallery");
+    return res.json();
+};

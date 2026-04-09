@@ -554,6 +554,168 @@ app.get("/public/project", async (c) => {
   }
 });
 
+// ---------------------------------------------------------------------------
+// CURATOR GALLERIES
+// ---------------------------------------------------------------------------
+
+app.get("/galleries", async (c) => {
+  const { user, response } = await requireUser(c);
+  if (!user) return response;
+  const supabase = getSupabaseAdmin();
+  const { data, error } = await supabase
+    .from("curator_galleries")
+    .select("id, title, description, project_ids, created_at")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false });
+  if (error) return c.json({ error: error.message }, 500);
+  return c.json({ galleries: data.map((g) => ({ ...g, projectIds: g.project_ids })) });
+});
+
+app.post("/galleries", async (c) => {
+  const { user, response } = await requireUser(c);
+  if (!user) return response;
+  const { title, description, projectIds } = await c.req.json();
+  if (!title) return c.json({ error: "Title required" }, 400);
+  const supabase = getSupabaseAdmin();
+  const { data, error } = await supabase
+    .from("curator_galleries")
+    .insert({ user_id: user.id, title, description: description || "", project_ids: projectIds || [] })
+    .select("id, title, description, project_ids, created_at")
+    .single();
+  if (error) return c.json({ error: error.message }, 500);
+  return c.json({ gallery: { ...data, projectIds: data.project_ids } });
+});
+
+app.put("/galleries/:id", async (c) => {
+  const { user, response } = await requireUser(c);
+  if (!user) return response;
+  const galleryId = c.req.param("id");
+  const body = await c.req.json();
+  const supabase = getSupabaseAdmin();
+  const { data: existing } = await supabase
+    .from("curator_galleries")
+    .select("id")
+    .eq("id", galleryId)
+    .eq("user_id", user.id)
+    .single();
+  if (!existing) return c.json({ error: "Not found" }, 404);
+  const updates: Record<string, any> = {};
+  if (body.title !== undefined) updates.title = body.title;
+  if (body.description !== undefined) updates.description = body.description;
+  if (body.projectIds !== undefined) updates.project_ids = body.projectIds;
+  const { data, error } = await supabase
+    .from("curator_galleries")
+    .update(updates)
+    .eq("id", galleryId)
+    .select("id, title, description, project_ids")
+    .single();
+  if (error) return c.json({ error: error.message }, 500);
+  return c.json({ gallery: { ...data, projectIds: data.project_ids } });
+});
+
+app.delete("/galleries/:id", async (c) => {
+  const { user, response } = await requireUser(c);
+  if (!user) return response;
+  const galleryId = c.req.param("id");
+  const supabase = getSupabaseAdmin();
+  const { error } = await supabase
+    .from("curator_galleries")
+    .delete()
+    .eq("id", galleryId)
+    .eq("user_id", user.id);
+  if (error) return c.json({ error: error.message }, 500);
+  return c.json({ success: true });
+});
+
+app.post("/gallery-share", async (c) => {
+  try {
+    const { user, response } = await requireUser(c);
+    if (!user) return response;
+    const { galleryId } = await c.req.json();
+    if (!galleryId) return c.json({ error: "Missing galleryId" }, 400);
+    const supabase = getSupabaseAdmin();
+    const { data: gallery } = await supabase
+      .from("curator_galleries")
+      .select("id")
+      .eq("id", galleryId)
+      .eq("user_id", user.id)
+      .single();
+    if (!gallery) return c.json({ error: "Not found" }, 404);
+    const { data: existing } = await supabase
+      .from("gallery_shares")
+      .select("short_id")
+      .eq("gallery_id", galleryId)
+      .eq("is_active", true)
+      .single();
+    if (existing) return c.json({ shortId: existing.short_id });
+    const shortId = crypto.randomUUID().slice(0, 10);
+    await supabase.from("gallery_shares").insert({ gallery_id: galleryId, short_id: shortId, is_active: true });
+    return c.json({ shortId });
+  } catch (err) {
+    console.error(err);
+    return c.json({ error: "Internal server error" }, 500);
+  }
+});
+
+app.get("/public/gallery", async (c) => {
+  try {
+    const shortId = c.req.query("id");
+    if (!shortId) return c.json({ error: "Missing ID" }, 400);
+    const supabase = getSupabaseAdmin();
+    const { data: share, error: shareError } = await supabase
+      .from("gallery_shares")
+      .select("gallery_id")
+      .eq("short_id", shortId)
+      .eq("is_active", true)
+      .single();
+    if (shareError || !share) return c.json({ error: "Link invalid or expired" }, 404);
+    const { data: gallery, error: galleryError } = await supabase
+      .from("curator_galleries")
+      .select("id, title, description, project_ids")
+      .eq("id", share.gallery_id)
+      .single();
+    if (galleryError || !gallery) return c.json({ error: "Gallery not found" }, 404);
+    const projectCards = await Promise.all(
+      (gallery.project_ids as string[]).map(async (projectId: string) => {
+        const { data: projectRow } = await supabase
+          .from("projects")
+          .select("id, data")
+          .eq("id", projectId)
+          .single();
+        if (!projectRow) return null;
+        const d = projectRow.data as any;
+        let imageUrl: string | null = null;
+        if (d.imagePath) {
+          const { data: signed } = await supabase.storage
+            .from(BUCKET_NAME)
+            .createSignedUrl(d.imagePath, 7200);
+          imageUrl = signed?.signedUrl ?? null;
+        }
+        const { data: projectShare } = await supabase
+          .from("project_shares")
+          .select("short_id")
+          .eq("project_id", projectId)
+          .eq("is_active", true)
+          .single();
+        return {
+          projectId: projectRow.id,
+          title: d.title ?? "Untitled",
+          imageUrl,
+          hotspotCount: (d.hotspots ?? []).length,
+          shareShortId: projectShare?.short_id ?? null,
+        };
+      })
+    );
+    return c.json({
+      gallery: { id: gallery.id, title: gallery.title, description: gallery.description },
+      projects: projectCards.filter(Boolean),
+    });
+  } catch (err) {
+    console.error(err);
+    return c.json({ error: "Internal server error" }, 500);
+  }
+});
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",

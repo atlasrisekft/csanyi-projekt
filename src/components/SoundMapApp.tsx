@@ -25,6 +25,7 @@ import {
   Loader2,
   AlertTriangle,
   RefreshCw,
+  LayoutGrid,
 } from "lucide-react";
 import { AuthView, supabase } from "./auth/AuthView";
 import { ProfileView } from "./auth/ProfileView";
@@ -60,7 +61,17 @@ import {
   getSharedProject,
   getUserPreferences,
   saveUserPreferences,
+  loadGalleries,
+  createGallery,
+  updateGallery,
+  deleteGallery,
+  getPublicGallery,
 } from "../utils/api";
+import { CuratorGalleriesView } from "./CuratorGalleriesView";
+import type { CuratorGallery } from "./CuratorGalleriesView";
+import { CuratorGalleryEditorView } from "./CuratorGalleryEditorView";
+import { PublicGalleryView } from "./PublicGalleryView";
+import type { PublicGalleryData } from "./PublicGalleryView";
 import { Card, CardContent } from "./ui/card";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
@@ -154,7 +165,7 @@ export type Project = {
   createdAt: number;
 };
 
-type ViewMode = "gallery" | "editor" | "player" | "profile";
+type ViewMode = "gallery" | "editor" | "player" | "profile" | "curator-galleries" | "curator-gallery-editor";
 
 const COLORS = [
   "#4f46e5", // Indigo
@@ -170,6 +181,37 @@ const COLORS = [
 // ---------------------------------------------------------------------------
 // CUSTOM UI COMPONENTS
 // ---------------------------------------------------------------------------
+
+const AutoTextarea = ({
+  className,
+  ...props
+}: React.TextareaHTMLAttributes<HTMLTextAreaElement>) => {
+  const ref = useRef<HTMLTextAreaElement>(null);
+
+  const adjust = useCallback(() => {
+    const el = ref.current;
+    if (!el) return;
+    el.style.height = "auto";
+    if (!el.value) {
+      el.value = el.placeholder;
+      el.style.height = el.scrollHeight + "px";
+      el.value = "";
+    } else {
+      el.style.height = el.scrollHeight + "px";
+    }
+  }, []);
+
+  useEffect(() => {
+    adjust();
+    const el = ref.current;
+    if (!el) return;
+    const ro = new ResizeObserver(adjust);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [adjust, props.value]);
+
+  return <textarea ref={ref} className={className} {...props} />;
+};
 
 const VolumeSlider = ({
   value,
@@ -890,8 +932,8 @@ const SettingsPanelContent = ({
                       <Label className="text-sm font-medium text-slate-900">
                         Accessibility description
                       </Label>
-                      <textarea
-                        className="w-full bg-slate-100 rounded-lg px-3 py-2 text-sm text-slate-500 outline-none resize-none min-h-[72px]"
+                      <AutoTextarea
+                        className="w-full bg-slate-100 rounded-lg px-3 py-2 text-sm text-slate-500 outline-none resize-none overflow-hidden"
                         placeholder={`Describe this sound for blind users, e.g. "Gentle rain ambience playing throughout the experience."`}
                         value={channel.accessibilityDescription ?? ""}
                         onChange={(e) =>
@@ -1181,8 +1223,8 @@ const SettingsPanelContent = ({
                         <Label className="text-sm font-medium text-slate-900">
                           Accessibility description
                         </Label>
-                        <textarea
-                          className="w-full bg-slate-100 rounded-lg px-3 py-2 text-sm text-slate-500 outline-none resize-none min-h-[72px]"
+                        <AutoTextarea
+                          className="w-full bg-slate-100 rounded-lg px-3 py-2 text-sm text-slate-500 outline-none resize-none overflow-hidden"
                           placeholder={`Describe this sound for blind users, e.g. "Soft violin melody representing the golden sky in the upper-right corner."`}
                           value={h.accessibilityDescription ?? ""}
                           onChange={(e) =>
@@ -1595,6 +1637,23 @@ export const SoundMapApp = () => {
     return false;
   });
 
+  // Public Gallery View State
+  const [isPublicGalleryView] = useState(() => {
+    if (typeof window !== "undefined") {
+      return /^\/g\/.+/.test(window.location.pathname);
+    }
+    return false;
+  });
+  const [publicGalleryData, setPublicGalleryData] = useState<PublicGalleryData | null>(null);
+  const [publicGalleryError, setPublicGalleryError] = useState<string | null>(null);
+  const [selectedGalleryProject, setSelectedGalleryProject] = useState<Project | null>(null);
+  const [isLoadingGalleryProject, setIsLoadingGalleryProject] = useState(false);
+
+  // Curator Gallery Admin State
+  const [galleries, setGalleries] = useState<CuratorGallery[]>([]);
+  const [isLoadingGalleries, setIsLoadingGalleries] = useState(false);
+  const [currentGalleryId, setCurrentGalleryId] = useState<string | null>(null);
+
   useEffect(() => {
     if (isSharedView) {
       const path = window.location.pathname;
@@ -1616,6 +1675,19 @@ export const SoundMapApp = () => {
       }
     }
   }, [isSharedView]);
+
+  useEffect(() => {
+    if (!isPublicGalleryView) return;
+    const match = window.location.pathname.match(/^\/g\/(.+)$/);
+    const shortId = match ? match[1] : null;
+    if (shortId) {
+      getPublicGallery(shortId)
+        .then((d: PublicGalleryData) => setPublicGalleryData(d))
+        .catch(() => setPublicGalleryError("Gallery not found or link expired."));
+    } else {
+      setPublicGalleryError("Invalid gallery link.");
+    }
+  }, [isPublicGalleryView]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -1684,6 +1756,13 @@ export const SoundMapApp = () => {
           }
         })
         .catch(console.error);
+
+      // Load Galleries
+      setIsLoadingGalleries(true);
+      loadGalleries(session.access_token)
+        .then((g: CuratorGallery[]) => setGalleries(g))
+        .catch(console.error)
+        .finally(() => setIsLoadingGalleries(false));
     }
   }, [session?.access_token]);
 
@@ -2055,6 +2134,32 @@ export const SoundMapApp = () => {
     );
   }
 
+  if (isPublicGalleryView) {
+    if (selectedGalleryProject) {
+      return (
+        <PlayerView
+          project={selectedGalleryProject}
+          onBack={() => setSelectedGalleryProject(null)}
+          isShared={true}
+        />
+      );
+    }
+    return (
+      <PublicGalleryView
+        data={publicGalleryData}
+        error={publicGalleryError}
+        isLoadingProject={isLoadingGalleryProject}
+        onOpenProject={(shareShortId) => {
+          setIsLoadingGalleryProject(true);
+          getSharedProject(shareShortId)
+            .then((p: Project) => setSelectedGalleryProject(p))
+            .catch(() => toast.error("Failed to load this sound map"))
+            .finally(() => setIsLoadingGalleryProject(false));
+        }}
+      />
+    );
+  }
+
   if (!session) {
     return <AuthView onLoginSuccess={() => {}} />;
   }
@@ -2092,8 +2197,50 @@ export const SoundMapApp = () => {
           }}
           onDelete={handleDeleteProject}
           onProfile={() => setView("profile")}
+          onManageGalleries={() => setView("curator-galleries")}
           isLoading={isLoadingProjects}
           session={session}
+        />
+      )}
+      {view === "curator-galleries" && (
+        <CuratorGalleriesView
+          galleries={galleries}
+          isLoading={isLoadingGalleries}
+          onCreate={() => {
+            createGallery(session.access_token, "New Gallery", "", [])
+              .then(({ gallery }: { gallery: CuratorGallery }) => {
+                setGalleries((prev) => [gallery, ...prev]);
+                setCurrentGalleryId(gallery.id);
+                setView("curator-gallery-editor");
+              })
+              .catch(() => toast.error("Failed to create gallery"));
+          }}
+          onEdit={(id) => {
+            setCurrentGalleryId(id);
+            setView("curator-gallery-editor");
+          }}
+          onDelete={(id) => {
+            deleteGallery(session.access_token, id)
+              .then(() => setGalleries((prev) => prev.filter((g) => g.id !== id)))
+              .catch(() => toast.error("Failed to delete gallery"));
+          }}
+          onBack={() => setView("gallery")}
+          session={session}
+        />
+      )}
+      {view === "curator-gallery-editor" && galleries.find((g) => g.id === currentGalleryId) && (
+        <CuratorGalleryEditorView
+          gallery={galleries.find((g) => g.id === currentGalleryId)!}
+          allProjects={projects}
+          onSave={async (updated) => {
+            await updateGallery(session.access_token, updated.id, {
+              title: updated.title,
+              description: updated.description,
+              projectIds: updated.projectIds,
+            });
+            setGalleries((prev) => prev.map((g) => g.id === updated.id ? updated : g));
+          }}
+          onBack={() => setView("curator-galleries")}
         />
       )}
       {view === "player" && currentProject && (
@@ -2208,6 +2355,7 @@ const GalleryView = ({
   onSelect,
   onDelete,
   onProfile,
+  onManageGalleries,
   isLoading,
   session,
 }: {
@@ -2216,6 +2364,7 @@ const GalleryView = ({
   onSelect: (id: string) => void;
   onDelete: (id: string) => void;
   onProfile: () => void;
+  onManageGalleries: () => void;
   isLoading: boolean;
   session: any;
 }) => {
@@ -2229,7 +2378,15 @@ const GalleryView = ({
               Select a sound map to edit or create a new one.
             </p>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              onClick={onManageGalleries}
+              className="text-slate-500 hover:text-indigo-600 h-10 px-3 sm:px-4 flex items-center gap-2"
+            >
+              <LayoutGrid className="w-5 h-5 shrink-0" />
+              <span className="hidden sm:inline text-sm font-medium">My Galleries</span>
+            </Button>
             <Button
               variant="ghost"
               onClick={onProfile}

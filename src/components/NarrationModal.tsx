@@ -35,6 +35,10 @@ export const NarrationModal = ({ open, onClose, onSave, sessionUserId, projectId
     const recordingTimerRef = useRef<NodeJS.Timeout | null>(null);
     const recordingAudioRef = useRef<HTMLAudioElement | null>(null);
     const audioChunksRef = useRef<Blob[]>([]);
+    const audioContextRef = useRef<AudioContext | null>(null);
+    const analyserRef = useRef<AnalyserNode | null>(null);
+    const animationFrameRef = useRef<number | null>(null);
+    const canvasRef = useRef<HTMLCanvasElement | null>(null);
     
     useEffect(() => {
         if (!open) {
@@ -114,6 +118,58 @@ export const NarrationModal = ({ open, onClose, onSave, sessionUserId, projectId
                 stream.getTracks().forEach(track => track.stop());
             };
             
+            // Set up audio analyser for spectrum visualisation
+            const audioCtx = new AudioContext();
+            const analyser = audioCtx.createAnalyser();
+            analyser.fftSize = 64;
+            audioCtx.createMediaStreamSource(stream).connect(analyser);
+            audioContextRef.current = audioCtx;
+            analyserRef.current = analyser;
+
+            const dataArray = new Uint8Array(analyser.frequencyBinCount);
+            const drawSpectrum = () => {
+                const canvas = canvasRef.current;
+                if (!canvas || !analyserRef.current) return;
+                const ctx = canvas.getContext('2d');
+                if (!ctx) return;
+
+                analyserRef.current.getByteFrequencyData(dataArray);
+
+                const W = canvas.width;
+                const H = canvas.height;
+                const cx = W / 2;
+                const cy = H / 2;
+                const innerRadius = 50;
+                const barCount = dataArray.length;
+
+                ctx.clearRect(0, 0, W, H);
+
+                for (let i = 0; i < barCount; i++) {
+                    const amplitude = dataArray[i] / 255;
+                    const barLen = amplitude * 36 + 5;
+                    const angle = (i / barCount) * Math.PI * 2 - Math.PI / 2;
+                    const x1 = cx + Math.cos(angle) * innerRadius;
+                    const y1 = cy + Math.sin(angle) * innerRadius;
+                    const x2 = cx + Math.cos(angle) * (innerRadius + barLen);
+                    const y2 = cy + Math.sin(angle) * (innerRadius + barLen);
+
+                    const grad = ctx.createLinearGradient(x1, y1, x2, y2);
+                    grad.addColorStop(0, `rgba(220,38,38,${0.7 + amplitude * 0.3})`);
+                    grad.addColorStop(1, `rgba(252,165,165,${0.2 + amplitude * 0.4})`);
+
+                    ctx.strokeStyle = grad;
+                    ctx.lineWidth = 3.5;
+                    ctx.lineCap = 'round';
+                    ctx.beginPath();
+                    ctx.moveTo(x1, y1);
+                    ctx.lineTo(x2, y2);
+                    ctx.stroke();
+                }
+
+                animationFrameRef.current = requestAnimationFrame(drawSpectrum);
+            };
+            drawSpectrum();
+
             mediaRecorder.start();
             setIsRecording(true);
             setRecordingDuration(0);
@@ -154,11 +210,23 @@ export const NarrationModal = ({ open, onClose, onSave, sessionUserId, projectId
             mediaRecorderRef.current.stop();
             setIsRecording(false);
         }
-        
+
         if (recordingTimerRef.current) {
             clearInterval(recordingTimerRef.current);
             recordingTimerRef.current = null;
         }
+
+        if (animationFrameRef.current) {
+            cancelAnimationFrame(animationFrameRef.current);
+            animationFrameRef.current = null;
+        }
+        if (audioContextRef.current) {
+            audioContextRef.current.close();
+            audioContextRef.current = null;
+        }
+        analyserRef.current = null;
+        const canvas = canvasRef.current;
+        if (canvas) canvas.getContext('2d')?.clearRect(0, 0, canvas.width, canvas.height);
     };
     
     const togglePlayRecording = () => {
@@ -350,10 +418,20 @@ export const NarrationModal = ({ open, onClose, onSave, sessionUserId, projectId
                             <div className="text-center space-y-6 max-w-md w-full">
                                 {!recordedBlob ? (
                                     <>
-                                        <div className={`w-24 h-24 mx-auto rounded-full flex items-center justify-center ${
-                                            isRecording ? 'bg-red-50 animate-pulse' : 'bg-indigo-50'
-                                        }`}>
-                                            <Mic className={`w-12 h-12 ${isRecording ? 'text-red-600' : 'text-indigo-600'}`} />
+                                        <div className="relative mx-auto flex items-center justify-center w-40 h-40">
+                                            {isRecording && (
+                                                <canvas
+                                                    ref={canvasRef}
+                                                    width={160}
+                                                    height={160}
+                                                    className="absolute inset-0"
+                                                />
+                                            )}
+                                            <div className={`w-24 h-24 rounded-full flex items-center justify-center relative z-10 ${
+                                                isRecording ? 'bg-red-50' : 'bg-indigo-50'
+                                            }`}>
+                                                <Mic className={`w-12 h-12 ${isRecording ? 'text-red-600' : 'text-indigo-600'}`} />
+                                            </div>
                                         </div>
                                         
                                         <div>
