@@ -29,7 +29,7 @@ export const ProfileView = ({ onBack, onSignOut, onShowOnboarding }: { onBack: (
 
         try {
             const { data: { session } } = await supabase.auth.getSession();
-            if (!session) throw new Error("No active session");
+            if (!session) throw new Error("Nincs aktív munkamenet");
 
             const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-5be515e6/invite`, {
                 method: 'POST',

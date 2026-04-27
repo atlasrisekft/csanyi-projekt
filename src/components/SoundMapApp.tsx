@@ -3141,39 +3141,42 @@ const PlayerView = ({
     };
   }, [isShared, hasStarted, project.introAudioUrl, project.introAudioLoop]);
 
-  // Accessible intro: first tap speaks instructions, then plays intro audio
+  const playIntroAudio = useCallback(() => {
+    if (project.introAudioUrl) {
+      setIntroPhase('narrating');
+      const audio = new Audio(project.introAudioUrl);
+      introAudioRef.current = audio;
+      audio.onended = () => handleStart();
+      audio.play().catch(console.error);
+    } else {
+      handleStart();
+    }
+  }, [project.introAudioUrl]);
+
+  // Accessible intro: first tap speaks instructions via TTS, then plays intro audio
   const startAccessibleIntro = useCallback(() => {
     if (introPhase !== 'idle') return;
 
     const name = project.title ? `${project.title}. ` : '';
-    const instructions = `${name}Ez egy interaktív hangtérkép. A bevezetés után húzd az ujjadat a képen a felfedezéshez. Minden zóna hangot játszik le, és néhány másodperc után felolvassa a leírást. Érintsd meg a képernyőt a folytatáshoz.`;
+    const instructions = `${name}Ez egy interaktív hangtérkép. A bevezetés után húzd az ujjadat a képen a felfedezéshez. Minden zóna hangot játszik le, és néhány másodperc után felolvassa a leírást. Érintsd meg a képernyőt az átugráshoz.`;
 
     const utterance = new SpeechSynthesisUtterance(instructions);
     setIntroPhase('speaking');
-
-    utterance.onend = () => {
-      if (project.introAudioUrl) {
-        setIntroPhase('narrating');
-        const audio = new Audio(project.introAudioUrl);
-        introAudioRef.current = audio;
-        audio.onended = () => handleStart();
-        audio.play().catch(console.error);
-      } else {
-        handleStart();
-      }
-    };
-
+    utterance.onend = playIntroAudio;
     speechSynthesis.speak(utterance);
-  }, [introPhase, project.title, project.introAudioUrl]);
+  }, [introPhase, project.title, playIntroAudio]);
 
   const handleIntroTap = useCallback(() => {
     if (introPhase === 'idle') {
       startAccessibleIntro();
+    } else if (introPhase === 'speaking') {
+      // Skip TTS, play narration directly
+      speechSynthesis.cancel();
+      playIntroAudio();
     } else if (introPhase === 'narrating') {
       handleStart();
     }
-    // Do nothing while 'speaking' — instructions must finish first
-  }, [introPhase, startAccessibleIntro]);
+  }, [introPhase, startAccessibleIntro, playIntroAudio]);
 
   const playHotspot = (hotspot: Hotspot) => {
     if (!hotspot.audioUrl) return;
@@ -3241,6 +3244,9 @@ const PlayerView = ({
           <p className="text-slate-400">Interaktív hangtérkép</p>
           {introPhase === 'idle' && (
             <p className="text-slate-500 text-sm mt-8">Érintsd meg a képernyőt a kezdéshez</p>
+          )}
+          {introPhase === 'speaking' && (
+            <p className="text-slate-500 text-sm mt-8">Érintsd meg a képernyőt az átugráshoz</p>
           )}
           {introPhase === 'narrating' && (
             <p className="text-slate-500 text-sm mt-8">Érintsd meg a képernyőt a folytatáshoz</p>

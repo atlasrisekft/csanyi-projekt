@@ -60,21 +60,21 @@ export const NarrationModal = ({ open, onClose, onSave, sessionUserId, projectId
         // Validate the file type
         const typeValidation = validateFileType(file);
         if (!typeValidation.isValid) {
-            toast.error(typeValidation.error || 'Invalid audio file');
+            toast.error(typeValidation.error || 'Érvénytelen hangfájl');
             return;
         }
         
         // Validate file size (uploaded file, not recording)
         const sizeValidation = validateFileSize(file.size, false);
         if (!sizeValidation.isValid) {
-            toast.error(sizeValidation.error || 'File too large');
+            toast.error(sizeValidation.error || 'A fájl túl nagy');
             return;
         }
         
         // Validate duration
         const durationValidation = await validateAudioDuration(file, false);
         if (!durationValidation.isValid) {
-            toast.error(durationValidation.error || 'Audio too long');
+            toast.error(durationValidation.error || 'A hang túl hosszú');
             return;
         }
         
@@ -224,7 +224,7 @@ export const NarrationModal = ({ open, onClose, onSave, sessionUserId, projectId
             // Validate the recording size (for recordings)
             const sizeValidation = validateFileSize(file.size, true);
             if (!sizeValidation.isValid) {
-                toast.error(sizeValidation.error || 'Recording too large');
+                toast.error(sizeValidation.error || 'A felvétel túl nagy');
                 return;
             }
 

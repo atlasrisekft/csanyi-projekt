@@ -26,7 +26,7 @@ export const getUploadUrl = async (token: string, path: string) => {
         headers: getHeaders(token),
         body: JSON.stringify({ path })
     });
-    if (!res.ok) throw new Error("Failed to get upload URL");
+    if (!res.ok) throw new Error("Feltöltési URL lekérése sikertelen");
     return res.json();
 };
 
@@ -40,7 +40,7 @@ export const getSignedUrl = async (token: string, path: string) => {
         const errorText = await res.text();
         // Log as warning since missing files are handled gracefully in refreshProjectUrls
         console.warn('Could not get signed URL:', res.status, errorText, 'for path:', path);
-        throw new Error(`Failed to get signed URL: ${res.status} ${errorText}`);
+        throw new Error(`Aláírt URL lekérése sikertelen: ${res.status} ${errorText}`);
     }
     return res.json();
 };
@@ -63,7 +63,7 @@ export const uploadFile = async (token: string, file: File, path: string) => {
         if (!uploadRes.ok) {
             const errorText = await uploadRes.text();
             console.error('Upload failed:', uploadRes.status, errorText);
-            throw new Error(`Failed to upload file: ${uploadRes.status} ${errorText}`);
+            throw new Error(`Fájl feltöltése sikertelen: ${uploadRes.status} ${errorText}`);
         }
         
         // Return the sanitized path that was actually used
@@ -100,7 +100,7 @@ export const saveProjects = async (token: string, projects: any[]) => {
         headers: getHeaders(token),
         body: JSON.stringify({ projects: sanitizedProjects })
     });
-    if (!res.ok) throw new Error("Failed to save projects");
+    if (!res.ok) throw new Error("A projektek mentése sikertelen");
     return res.json();
 };
 
@@ -108,7 +108,7 @@ export const loadProjects = async (token: string) => {
     const res = await fetch(`${BASE_URL}/projects`, {
         headers: getHeaders(token)
     });
-    if (!res.ok) throw new Error("Failed to load projects");
+    if (!res.ok) throw new Error("A projektek betöltése sikertelen");
     const { projects } = await res.json();
     return projects;
 };
@@ -123,7 +123,7 @@ export const getSharedProject = async (shortId: string) => {
         }
     );
 
-    if (!res.ok) throw new Error("Failed to load project");
+    if (!res.ok) throw new Error("A projekt betöltése sikertelen");
 
     const { project } = await res.json();
     return project;
@@ -135,7 +135,7 @@ export const createShareLink = async (token: string, projectId: string) => {
         headers: getHeaders(token),
         body: JSON.stringify({ projectId })
     });
-    if (!res.ok) throw new Error("Failed to create share link");
+    if (!res.ok) throw new Error("A megosztási link létrehozása sikertelen");
     return res.json();
 };
 
@@ -143,7 +143,7 @@ export const getUserPreferences = async (token: string) => {
     const res = await fetch(`${BASE_URL}/user/preferences`, {
         headers: getHeaders(token)
     });
-    if (!res.ok) throw new Error("Failed to load preferences");
+    if (!res.ok) throw new Error("A beállítások betöltése sikertelen");
     const { preferences } = await res.json();
     return preferences;
 };
@@ -154,6 +154,6 @@ export const saveUserPreferences = async (token: string, preferences: any) => {
         headers: getHeaders(token),
         body: JSON.stringify(preferences)
     });
-    if (!res.ok) throw new Error("Failed to save preferences");
+    if (!res.ok) throw new Error("A beállítások mentése sikertelen");
     return res.json();
 };
