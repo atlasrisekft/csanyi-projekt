@@ -259,9 +259,9 @@ export const AuthView = ({ onLoginSuccess, onBack }: { onLoginSuccess: () => voi
                         </div>
                     ) : (
                         <Tabs defaultValue="login" className="w-full">
-                            <TabsList className="grid w-full grid-cols-2 mb-4">
-                                <TabsTrigger value="login">Bejelentkezés</TabsTrigger>
-                                <TabsTrigger value="signup">Regisztráció</TabsTrigger>
+                            <TabsList className="grid w-full grid-cols-2 mb-4 h-11 rounded-full p-1">
+                                <TabsTrigger value="login" className="rounded-full">Bejelentkezés</TabsTrigger>
+                                <TabsTrigger value="signup" className="rounded-full">Regisztráció</TabsTrigger>
                             </TabsList>
 
                             <TabsContent value="login">

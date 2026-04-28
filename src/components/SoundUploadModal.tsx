@@ -488,7 +488,7 @@ export const SoundUploadModal = ({ open, onOpenChange, onLocalUpload, onLibraryS
             <DialogContent className="max-w-4xl w-[90vw] h-[80vh] max-h-[700px] flex flex-col p-0">
                 <DialogHeader className="px-6 pt-6 pb-4 border-b">
                     <DialogTitle>Hang feltöltése</DialogTitle>
-                    <DialogDescription>Tölts fel hangot a számítógépedről, vagy böngéssz a hangkönyvtárban.</DialogDescription>
+                    <DialogDescription>Tölts fel hangfájlt, vagy készíts felvételt a mikrofonod segítségével</DialogDescription>
                 </DialogHeader>
 
                 {/* Tabs */}

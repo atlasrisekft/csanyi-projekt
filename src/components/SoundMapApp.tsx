@@ -1500,7 +1500,7 @@ const TOUR_STEPS: TourStep[] = [
   {
     id: "upload-image",
     targetId: "tour-upload-image",
-    title: "Alaplép feltöltése",
+    title: "Alapkép feltöltése",
     description:
       "Töltsd fel azt a képet, amelyet interaktívvá szeretnél tenni. Ez lehet alaprajz, térkép, műalkotás vagy bármilyen kép, amelyre hangzónákat szeretnél helyezni.",
     placement: "bottom",
@@ -1510,7 +1510,7 @@ const TOUR_STEPS: TourStep[] = [
     targetId: "tour-canvas-area",
     title: "Hangzónák rajzolása",
     description:
-      "Kattints a képedre, hogy sokszögeket rajzolj az interaktívvá tenni kívánt területek köré. Minden zónának saját hangja lehet. Kattints több pontra az alak megrajzolásához, majd kattints a kezdőponthoz közel a lezáráshoz.",
+      "Kattints a képre, és jelöld ki a területet lenyomott egérrel, amit interaktívvá szeretnél tenni. Minden zónához külön hang tartozhat. Ha elengeded az egeret, létrehozzuk a zónát, és megnyílik a beállító panel.",
     placement: "left",
     interactive: true,
   },
