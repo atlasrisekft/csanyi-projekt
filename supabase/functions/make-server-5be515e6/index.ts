@@ -172,6 +172,61 @@ app.post("/projects", async (c) => {
   return c.json({ success: true });
 });
 
+app.patch("/projects/:id", async (c) => {
+  const { user, response } = await requireUser(c);
+  if (!user) return response;
+
+  const projectId = c.req.param("id");
+  const { isPublic } = await c.req.json();
+
+  const supabase = getSupabaseAdmin();
+
+  // Verify ownership
+  const { data: existing, error: fetchError } = await supabase
+    .from("projects")
+    .select("id")
+    .eq("id", projectId)
+    .eq("user_id", user.id)
+    .single();
+
+  if (fetchError || !existing) {
+    return c.json({ error: "Project not found" }, 404);
+  }
+
+  const { error } = await supabase
+    .from("projects")
+    .update({ is_public: isPublic })
+    .eq("id", projectId);
+
+  if (error) {
+    return c.json({ error: error.message }, 500);
+  }
+
+  // Auto-create share link when making public
+  let shareShortId: string | null = null;
+  if (isPublic) {
+    const { data: existingShare } = await supabase
+      .from("project_shares")
+      .select("short_id")
+      .eq("project_id", projectId)
+      .eq("is_active", true)
+      .single();
+
+    if (existingShare) {
+      shareShortId = existingShare.short_id;
+    } else {
+      shareShortId = crypto.randomUUID().slice(0, 10);
+      await supabase.from("project_shares").insert({
+        short_id: shareShortId,
+        project_id: projectId,
+        is_active: true,
+      });
+    }
+  }
+
+  return c.json({ success: true, shareShortId });
+});
+
 // Signup Route (Auto-confirm email)
 app.post("/signup", async (c) => {
   try {

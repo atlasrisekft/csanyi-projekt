@@ -3391,18 +3391,17 @@ const PlayerView = ({
 
   return (
     <div className="fixed inset-0 bg-slate-900 flex flex-col z-50">
-      {!isShared && (
-        <div className="absolute top-4 left-4 z-50">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleBack}
-            className="bg-black/20 text-white border-white/20 backdrop-blur-md hover:bg-black/40"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" /> Vissza a szerkesztéshez
-          </Button>
-        </div>
-      )}
+      <div className="absolute top-4 left-4 z-50">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleBack}
+          className="bg-black/20 text-white border-white/20 backdrop-blur-md hover:bg-black/40"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          {isShared ? "Vissza a galériához" : "Vissza a szerkesztéshez"}
+        </Button>
+      </div>
 
       <div
         className="flex-1 flex items-center justify-center p-4 overflow-hidden"
