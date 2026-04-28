@@ -61,6 +61,8 @@ import {
   getSharedProject,
   getUserPreferences,
   saveUserPreferences,
+  toggleProjectPublic,
+  getPublicProjects,
 } from "../utils/api";
 import { Card, CardContent } from "./ui/card";
 import { Input } from "./ui/input";
@@ -82,6 +84,8 @@ import {
   DrawerTrigger,
 } from "./ui/drawer";
 import { toast } from "sonner";
+import { RootGalleryView } from "./RootGalleryView";
+import type { PublicGalleryProject } from "./PublicGalleryView";
 
 // ---------------------------------------------------------------------------
 // TYPES
@@ -153,6 +157,7 @@ export type Project = {
   introAudioLoop: boolean;
   introAudioAccessibilityDescription?: string;
   createdAt: number;
+  isPublic?: boolean;
 };
 
 type ViewMode = "gallery" | "editor" | "player" | "profile";
@@ -531,9 +536,11 @@ const useAudioEngine = () => {
 const ShareDialogContent = ({
   session,
   project,
+  onTogglePublic,
 }: {
   session: any;
   project: Project;
+  onTogglePublic: (projectId: string, isPublic: boolean) => void;
 }) => {
   const [link, setLink] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -567,58 +574,72 @@ const ShareDialogContent = ({
   }
 
   return (
-    <div className="flex items-center space-x-2 mt-4">
-      <div className="grid flex-1 gap-2">
-        <label htmlFor="link" className="sr-only">
-          Hivatkozás
-        </label>
-        <input
-          id="link"
-          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-          readOnly
-          value={link}
+    <div className="space-y-4 mt-4">
+      <div className="flex items-center space-x-2">
+        <div className="grid flex-1 gap-2">
+          <label htmlFor="link" className="sr-only">
+            Hivatkozás
+          </label>
+          <input
+            id="link"
+            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            readOnly
+            value={link}
+          />
+        </div>
+        <Button
+          size="sm"
+          className="px-3 gap-1"
+          onClick={async () => {
+            try {
+              await navigator.clipboard.writeText(link);
+            } catch (e) {
+              const input = document.getElementById("link") as HTMLInputElement;
+              if (input) {
+                input.select();
+                document.execCommand("copy");
+              }
+            }
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+          }}
+        >
+          {copied ? (
+            <>
+              <Check className="h-4 w-4" />
+              <span className="text-xs">Másolva</span>
+            </>
+          ) : (
+            <>
+              <Copy className="h-4 w-4" />
+              <span className="sr-only">Másolás</span>
+            </>
+          )}
+        </Button>
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          className="px-3"
+          onClick={() => {
+            window.open(link, "_blank");
+          }}
+        >
+          <ExternalLink className="h-4 w-4" />
+        </Button>
+      </div>
+      <div className="flex items-center justify-between rounded-lg border border-slate-200 p-3">
+        <div className="space-y-0.5">
+          <p className="text-sm font-medium">Megjelenés a nyilvános galériában</p>
+          <p className="text-xs text-slate-500">
+            Ha bekapcsolod, ez a projekt látható lesz a főoldalon mindenki számára.
+          </p>
+        </div>
+        <Switch
+          checked={project.isPublic ?? false}
+          onCheckedChange={(checked) => onTogglePublic(project.id, checked)}
         />
       </div>
-      <Button
-        size="sm"
-        className="px-3 gap-1"
-        onClick={async () => {
-          try {
-            await navigator.clipboard.writeText(link);
-          } catch (e) {
-            const input = document.getElementById("link") as HTMLInputElement;
-            if (input) {
-              input.select();
-              document.execCommand("copy");
-            }
-          }
-          setCopied(true);
-          setTimeout(() => setCopied(false), 2000);
-        }}
-      >
-        {copied ? (
-          <>
-            <Check className="h-4 w-4" />
-            <span className="text-xs">Másolva</span>
-          </>
-        ) : (
-          <>
-            <Copy className="h-4 w-4" />
-            <span className="sr-only">Másolás</span>
-          </>
-        )}
-      </Button>
-      <Button
-        type="button"
-        size="sm"
-        variant="outline"
-        className="px-3"
-        onClick={() => {
-          window.open(link, "_blank");
-        }}
-      >
-        <ExternalLink className="h-4 w-4" />
-      </Button>
     </div>
   );
 };
@@ -1599,6 +1620,19 @@ export const SoundMapApp = () => {
     return false;
   });
 
+  const [isRootGalleryView, setIsRootGalleryView] = useState(() => {
+    if (typeof window !== "undefined") {
+      const path = window.location.pathname;
+      return !(/^\/s\/.+/.test(path)) && !(/^\/g\/.+/.test(path));
+    }
+    return true;
+  });
+  const [rootGalleryProjects, setRootGalleryProjects] = useState<PublicGalleryProject[]>([]);
+  const [isLoadingRootGallery, setIsLoadingRootGallery] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [isLoadingGalleryProject, setIsLoadingGalleryProject] = useState(false);
+  const [selectedGalleryProject, setSelectedGalleryProject] = useState<Project | null>(null);
+
   useEffect(() => {
     if (isSharedView) {
       const path = window.location.pathname;
@@ -1620,6 +1654,15 @@ export const SoundMapApp = () => {
       }
     }
   }, [isSharedView]);
+
+  useEffect(() => {
+    if (!isRootGalleryView) return;
+    setIsLoadingRootGallery(true);
+    getPublicProjects()
+      .then(setRootGalleryProjects)
+      .catch((err) => console.error("Publikus projektek betöltése sikertelen:", err))
+      .finally(() => setIsLoadingRootGallery(false));
+  }, [isRootGalleryView]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -2017,6 +2060,21 @@ export const SoundMapApp = () => {
     }
   };
 
+  const handleTogglePublic = async (projectId: string, isPublic: boolean) => {
+    setProjects((prev) =>
+      prev.map((p) => (p.id === projectId ? { ...p, isPublic } : p))
+    );
+    try {
+      await toggleProjectPublic(session.access_token, projectId, isPublic);
+      toast.success(isPublic ? "A projekt most nyilvános" : "A projekt most privát");
+    } catch {
+      setProjects((prev) =>
+        prev.map((p) => (p.id === projectId ? { ...p, isPublic: !isPublic } : p))
+      );
+      toast.error("A láthatóság frissítése sikertelen");
+    }
+  };
+
   const handleShare = () => {
     if (showOnboarding && tourStepIndex === 9) {
       // Move to final step
@@ -2056,6 +2114,49 @@ export const SoundMapApp = () => {
         }}
         isShared={true}
       />
+    );
+  }
+
+  if (isRootGalleryView) {
+    if (selectedGalleryProject) {
+      return (
+        <PlayerView
+          project={selectedGalleryProject}
+          onBack={() => setSelectedGalleryProject(null)}
+          isShared={true}
+        />
+      );
+    }
+    return (
+      <>
+        <RootGalleryView
+          projects={rootGalleryProjects}
+          isLoading={isLoadingRootGallery}
+          session={session}
+          onOpenProject={(shareShortId: string) => {
+            setIsLoadingGalleryProject(true);
+            getSharedProject(shareShortId)
+              .then((p: Project) => setSelectedGalleryProject(p))
+              .catch(() => toast.error("A hangtérkép betöltése sikertelen"))
+              .finally(() => setIsLoadingGalleryProject(false));
+          }}
+          isLoadingProject={isLoadingGalleryProject}
+          onLoginClick={() => setShowAuthModal(true)}
+          onMyProjectsClick={() => setIsRootGalleryView(false)}
+        />
+        {showAuthModal && (
+          <div
+            className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center"
+            onClick={() => setShowAuthModal(false)}
+          >
+            <div onClick={(e) => e.stopPropagation()}>
+              <AuthView onLoginSuccess={() => {
+                setShowAuthModal(false);
+              }} />
+            </div>
+          </div>
+        )}
+      </>
     );
   }
 
@@ -2129,6 +2230,7 @@ export const SoundMapApp = () => {
           tourStepIndex={tourStepIndex}
           setTourStepIndex={setTourStepIndex}
           showOnboarding={showOnboarding}
+          onTogglePublic={handleTogglePublic}
         />
       )}
       {!currentProject && view !== "gallery" && (
@@ -2436,6 +2538,7 @@ const EditorView = ({
   tourStepIndex,
   setTourStepIndex,
   showOnboarding,
+  onTogglePublic,
 }: {
   project: Project;
   onUpdate: (p: Project | ((prev: Project) => Project)) => void;
@@ -2448,6 +2551,7 @@ const EditorView = ({
   tourStepIndex?: number;
   setTourStepIndex?: (index: number) => void;
   showOnboarding?: boolean;
+  onTogglePublic: (projectId: string, isPublic: boolean) => void;
 }) => {
   const [isDrawing, setIsDrawing] = useState(false);
   const [currentPoints, setCurrentPoints] = useState<Point[]>([]);
@@ -2807,7 +2911,7 @@ const EditorView = ({
                   Tökéletes tabletekhez.
                 </DialogDescription>
               </DialogHeader>
-              <ShareDialogContent session={session} project={project} />
+              <ShareDialogContent session={session} project={project} onTogglePublic={onTogglePublic} />
             </DialogContent>
           </Dialog>
 
