@@ -3218,7 +3218,7 @@ const PlayerView = ({
   };
 
   const handleBack = () => {
-    // Exit fullscreen
+    speechSynthesis.cancel();
     if (document.fullscreenElement) {
       document
         .exitFullscreen()
@@ -3340,7 +3340,7 @@ const PlayerView = ({
             variant="outline"
             size="sm"
             onClick={handleBack}
-            className="bg-black/20 text-white border-white/20 backdrop-blur-md hover:bg-black/40"
+            className="bg-white/20 text-white border-white/40 backdrop-blur-md hover:bg-white/40 hover:text-white hover:border-white/60 hover:underline"
           >
             <ArrowLeft className="w-4 h-4 mr-2" /> Vissza a galériához
           </Button>
@@ -3406,7 +3406,7 @@ const PlayerView = ({
           variant="outline"
           size="sm"
           onClick={handleBack}
-          className="bg-black/20 text-white border-white/20 backdrop-blur-md hover:bg-black/40"
+          className="bg-white/20 text-white border-white/40 backdrop-blur-md hover:bg-white/40 hover:text-white hover:border-white/60 hover:underline"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
           {isShared ? "Vissza a galériához" : "Vissza a szerkesztéshez"}
