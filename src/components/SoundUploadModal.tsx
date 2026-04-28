@@ -43,7 +43,7 @@ interface SoundUploadModalProps {
 }
 
 export const SoundUploadModal = ({ open, onOpenChange, onLocalUpload, onLibrarySelect }: SoundUploadModalProps) => {
-    const [activeTab, setActiveTab] = useState<'local' | 'library' | 'record'>('local');
+    const [activeTab, setActiveTab] = useState<'local' | 'record'>('local');
     const [searchQuery, setSearchQuery] = useState('');
     const [sounds, setSounds] = useState<Sound[]>([]);
     const [isSearching, setIsSearching] = useState(false);
@@ -505,17 +505,6 @@ export const SoundUploadModal = ({ open, onOpenChange, onLocalUpload, onLibraryS
                         Feltöltés számítógépről
                     </button>
                     <button
-                        onClick={() => setActiveTab('library')}
-                        className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
-                            activeTab === 'library'
-                                ? 'border-indigo-600 text-indigo-600'
-                                : 'border-transparent text-slate-500 hover:text-slate-700'
-                        }`}
-                    >
-                        <Search className="w-4 h-4 inline mr-2" />
-                        Hangkönyvtár böngészése
-                    </button>
-                    <button
                         onClick={() => setActiveTab('record')}
                         className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
                             activeTab === 'record'
@@ -681,104 +670,121 @@ export const SoundUploadModal = ({ open, onOpenChange, onLocalUpload, onLibraryS
                             </div>
                         </div>
                     ) : (
-                        <div className="h-full flex flex-col">
-                            {/* Search Bar */}
-                            <div className="p-6 border-b">
-                                <div className="flex gap-2">
-                                    <div className="relative flex-1">
-                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                                        <Input
-                                            placeholder="Hangok keresése... (pl. 'madarak', 'eső', 'lépések')"
-                                            value={searchQuery}
-                                            onChange={(e) => setSearchQuery(e.target.value)}
-                                            onKeyDown={(e) => e.key === 'Enter' && searchSounds()}
-                                            className="pl-10"
-                                        />
-                                    </div>
-                                    <Button onClick={searchSounds} disabled={isSearching || !searchQuery.trim()} className="bg-indigo-600 hover:bg-indigo-700 text-white">
-                                        {isSearching ? (
-                                            <Loader2 className="w-4 h-4 animate-spin" />
-                                        ) : (
-                                            'Keresés'
+                        <div className="h-full flex items-center justify-center p-8">
+                            <div className="text-center space-y-6 max-w-md w-full">
+                                {!recordedBlob ? (
+                                    <>
+                                        <div className={`w-24 h-24 mx-auto rounded-full flex items-center justify-center ${
+                                            isRecording ? 'bg-red-50 animate-pulse' : 'bg-indigo-50'
+                                        }`}>
+                                            <Mic className={`w-12 h-12 ${isRecording ? 'text-red-600' : 'text-indigo-600'}`} />
+                                        </div>
+                                        
+                                        <div>
+                                            <h3 className="text-lg font-semibold mb-2">
+                                                {isRecording ? 'Felvétel folyamatban...' : 'Hangfelvétel'}
+                                            </h3>
+                                            <p className="text-sm text-slate-500 mb-4">
+                                                {isRecording
+                                                    ? 'Kattints a leállításra, ha kész vagy'
+                                                    : 'Kattints az alábbi gombra a felvétel indításához'}
+                                            </p>
+                                        </div>
+
+                                        {isRecording && (
+                                            <div className="text-3xl font-mono font-bold text-indigo-600">
+                                                {formatRecordingDuration(recordingDuration)}
+                                            </div>
                                         )}
-                                    </Button>
-                                </div>
-                            </div>
 
-                            {/* Results */}
-                            <div className="flex-1 overflow-hidden" ref={handleScrollAreaMount}>
-                                <ScrollArea className="h-full">
-                                    <div className="p-6">
-                                        {!hasSearched ? (
-                                            <div className="text-center py-12 text-slate-400">
-                                                <Search className="w-16 h-16 mx-auto mb-4 opacity-20" />
-                                                <p className="text-sm">Keress hangokat a Freesound.org könyvtárban</p>
-                                                <p className="text-xs mt-2">Próbálj rákeresni: ambient, természet, zene, effektek</p>
+                                        {recordingError && (
+                                            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                                                <p className="text-sm text-red-600">{recordingError}</p>
                                             </div>
-                                        ) : isSearching ? (
-                                            <div className="text-center py-12">
-                                                <Loader2 className="w-8 h-8 mx-auto animate-spin text-indigo-600 mb-4" />
-                                                <p className="text-sm text-slate-500">Hangok keresése...</p>
-                                            </div>
-                                        ) : sounds.length === 0 ? (
-                                            <div className="text-center py-12 text-slate-400">
-                                                <p className="text-sm">Nem találtunk hangot. Próbálj más keresési kifejezést.</p>
-                                            </div>
-                                        ) : (
-                                            <div className="space-y-2">
-                                                {sounds.map((sound) => (
-                                                    <div
-                                                        key={sound.id}
-                                                        className="flex items-start gap-3 p-4 bg-white border rounded-lg hover:border-indigo-300 hover:bg-indigo-50 transition-all group"
-                                                    >
-                                                        {/* Play/Pause Button */}
-                                                        <button
-                                                            onClick={() => togglePlayPreview(sound)}
-                                                            className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center hover:bg-indigo-200 transition-colors shrink-0"
-                                                        >
-                                                            {playingId === sound.id ? (
-                                                                <Pause className="w-5 h-5 text-indigo-600" />
-                                                            ) : (
-                                                                <Play className="w-5 h-5 text-indigo-600 ml-0.5" />
-                                                            )}
-                                                        </button>
+                                        )}
 
-                                                        {/* Info */}
-                                                        <div className="flex-1 min-w-0 overflow-hidden">
-                                                            <h4 className="font-medium text-sm truncate">{truncateText(sound.name, 25)}</h4>
-                                                            <div className="flex items-center gap-2 text-xs text-slate-500 mt-0.5">
-                                                                <span className="truncate max-w-[80px]">Feltöltő: {sound.username}</span>
-                                                                <span>•</span>
-                                                                <span className="shrink-0">{formatDuration(sound.duration)}</span>
-                                                            </div>
-                                                            {sound.description && (
-                                                                <p className="text-xs text-slate-500 mt-1 truncate">
-                                                                    {truncateText(sound.description, 30)}
-                                                                </p>
-                                                            )}
-                                                        </div>
+                                        <Button
+                                            size="lg"
+                                            onClick={isRecording ? stopRecording : startRecording}
+                                            className={`w-full ${
+                                                isRecording 
+                                                    ? 'bg-red-600 hover:bg-red-700 text-white' 
+                                                    : 'bg-indigo-600 hover:bg-indigo-700 text-white'
+                                            }`}
+                                        >
+                                            {isRecording ? (
+                                                <>
+                                                    <Square className="w-4 h-4 mr-2" />
+                                                    Felvétel leállítása
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Mic className="w-4 h-4 mr-2" />
+                                                    Felvétel indítása
+                                                </>
+                                            )}
+                                        </Button>
 
-                                                        {/* Select Button */}
-                                                        <Button
-                                                            size="sm"
-                                                            onClick={() => handleSelectSound(sound)}
-                                                            className="opacity-0 group-hover:opacity-100 transition-opacity shrink-0 bg-indigo-600 hover:bg-indigo-700 text-white"
-                                                        >
-                                                            <Download className="w-4 h-4 mr-2" />
-                                                            Kiválasztás
-                                                        </Button>
-                                                    </div>
-                                                ))}
-                                                {isLoadingMore && (
-                                                    <div className="text-center py-4">
-                                                        <Loader2 className="w-6 h-6 mx-auto animate-spin text-indigo-600" />
-                                                        <p className="text-xs text-slate-500 mt-2">További hangok betöltése...</p>
-                                                    </div>
+                                        <p className="text-xs text-slate-400">
+                                            Győződj meg arról, hogy a mikrofonod csatlakoztatva van és az engedélyek meg vannak adva
+                                        </p>
+                                    </>
+                                ) : (
+                                    <>
+                                        <div className="w-24 h-24 mx-auto bg-green-50 rounded-full flex items-center justify-center">
+                                            <Check className="w-12 h-12 text-green-600" />
+                                        </div>
+                                        
+                                        <div>
+                                            <h3 className="text-lg font-semibold mb-2">Felvétel kész</h3>
+                                            <p className="text-sm text-slate-500 mb-2">
+                                                Időtartam: {formatRecordingDuration(recordingDuration)}
+                                            </p>
+                                            <p className="text-xs text-slate-400">
+                                                Hallgasd meg a felvételt, vagy vegyél fel újat
+                                            </p>
+                                        </div>
+
+                                        <div className="flex gap-2">
+                                            <Button
+                                                size="lg"
+                                                variant="outline"
+                                                onClick={togglePlayRecording}
+                                                className="flex-1"
+                                            >
+                                                {isPlayingRecording ? (
+                                                    <>
+                                                        <Pause className="w-4 h-4 mr-2" />
+                                                        Szünet
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <Play className="w-4 h-4 mr-2" />
+                                                        Előnézet
+                                                    </>
                                                 )}
-                                            </div>
-                                        )}
-                                    </div>
-                                </ScrollArea>
+                                            </Button>
+                                            <Button
+                                                size="lg"
+                                                variant="outline"
+                                                onClick={resetRecording}
+                                                className="flex-1"
+                                            >
+                                                <RotateCcw className="w-4 h-4 mr-2" />
+                                                Újrafelvétel
+                                            </Button>
+                                        </div>
+
+                                        <Button
+                                            size="lg"
+                                            onClick={useRecording}
+                                            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white"
+                                        >
+                                            <Check className="w-4 h-4 mr-2" />
+                                            Felvétel használata
+                                        </Button>
+                                    </>
+                                )}
                             </div>
                         </div>
                     )}

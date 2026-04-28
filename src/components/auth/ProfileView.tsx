@@ -1,18 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from './AuthView';
 import { Button } from "../ui/button";
-import { Input } from "../ui/input";
-import { Label } from "../ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../ui/card";
-import { User, Mail, LogOut, Shield, Check, AlertCircle, ArrowLeft, HelpCircle } from "lucide-react";
-import { Alert, AlertDescription } from "../ui/alert";
-import { projectId } from '../../utils/supabase/info';
+import { User, LogOut, ArrowLeft, HelpCircle } from "lucide-react";
 
 export const ProfileView = ({ onBack, onSignOut, onShowOnboarding }: { onBack: () => void, onSignOut: () => void, onShowOnboarding?: () => void }) => {
     const [user, setUser] = useState<any>(null);
-    const [inviteEmail, setInviteEmail] = useState("");
-    const [isInviting, setIsInviting] = useState(false);
-    const [inviteStatus, setInviteStatus] = useState<{type: 'success'|'error', message: string} | null>(null);
+    
 
     useEffect(() => {
         const getUser = async () => {
@@ -22,38 +16,7 @@ export const ProfileView = ({ onBack, onSignOut, onShowOnboarding }: { onBack: (
         getUser();
     }, []);
 
-    const handleInvite = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setIsInviting(true);
-        setInviteStatus(null);
-
-        try {
-            const { data: { session } } = await supabase.auth.getSession();
-            if (!session) throw new Error("Nincs aktív munkamenet");
-
-            const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-5be515e6/invite`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${session.access_token}`
-                },
-                body: JSON.stringify({ email: inviteEmail })
-            });
-
-            const result = await response.json();
-
-            if (!response.ok) {
-                throw new Error(result.error || "A meghívó küldése sikertelen");
-            }
-
-            setInviteStatus({ type: 'success', message: "A meghívó sikeresen elküldve!" });
-            setInviteEmail("");
-        } catch (err: any) {
-            setInviteStatus({ type: 'error', message: err.message || "Nem sikerült elküldeni a meghívót" });
-        } finally {
-            setIsInviting(false);
-        }
-    };
+    
 
     const handleSignOut = async () => {
         await supabase.auth.signOut();
@@ -101,49 +64,7 @@ export const ProfileView = ({ onBack, onSignOut, onShowOnboarding }: { onBack: (
                     )}
                 </Card>
 
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                            <Shield className="w-5 h-5 text-indigo-600" />
-                            Adminisztrátori vezérlők
-                        </CardTitle>
-                        <CardDescription>Hívj meg új tagokat a munkaterületre.</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <form onSubmit={handleInvite} className="space-y-4">
-                            {inviteStatus && (
-                                <Alert variant={inviteStatus.type === 'success' ? 'default' : 'destructive'} className={inviteStatus.type === 'success' ? "border-green-200 bg-green-50 text-green-800" : ""}>
-                                    {inviteStatus.type === 'success' ? <Check className="h-4 w-4" /> : <AlertCircle className="h-4 w-4" />}
-                                    <AlertDescription>{inviteStatus.message}</AlertDescription>
-                                </Alert>
-                            )}
-                            
-                            <div className="flex gap-3">
-                                <div className="flex-1">
-                                    <Label htmlFor="invite-email" className="sr-only">Email cím</Label>
-                                    <div className="relative">
-                                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                                        <Input 
-                                            id="invite-email" 
-                                            placeholder="colleague@example.com" 
-                                            className="pl-9"
-                                            value={inviteEmail}
-                                            onChange={(e) => setInviteEmail(e.target.value)}
-                                            required
-                                            type="email"
-                                        />
-                                    </div>
-                                </div>
-                                <Button type="submit" disabled={isInviting} className="bg-indigo-600 hover:bg-indigo-700 text-white">
-                                    {isInviting ? "Küldés..." : "Meghívó küldése"}
-                                </Button>
-                            </div>
-                            <p className="text-xs text-slate-500">
-                                Erre a címre meghívót küldünk. A meghívott személy regisztrálhat és hozzáférhet a megosztott projektekhez.
-                            </p>
-                        </form>
-                    </CardContent>
-                </Card>
+                {/* Admin controls removed */}
             </div>
         </div>
     );
