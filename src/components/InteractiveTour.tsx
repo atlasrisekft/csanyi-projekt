@@ -124,7 +124,7 @@ export const InteractiveTour = ({ steps, currentStepIndex, isOpen, onNext, onClo
               left = targetRect.right + GAP;
               break;
       }
-
+      
       // Clamp to Viewport
       left = Math.max(PADDING, Math.min(left, viewportWidth - width - PADDING));
       top = Math.max(PADDING, Math.min(top, viewportHeight - height - PADDING));
