@@ -86,7 +86,16 @@ export const AuthView = ({ onLoginSuccess }: { onLoginSuccess: () => void }) => 
             if (error) throw error;
             onLoginSuccess();
         } catch (err: any) {
-            setError(err.message || "Nem sikerült bejelentkezni");
+            const msg: string = err.message || "";
+            if (msg.includes("Invalid login credentials") || msg.includes("invalid_credentials")) {
+                setError("Hibás email cím vagy jelszó.");
+            } else if (msg.includes("Email not confirmed")) {
+                setError("Az email cím nincs megerősítve.");
+            } else if (msg.includes("Too many requests")) {
+                setError("Túl sok bejelentkezési kísérlet. Próbáld újra később.");
+            } else {
+                setError(msg || "Nem sikerült bejelentkezni.");
+            }
         } finally {
             setIsLoading(false);
         }
