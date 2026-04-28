@@ -1506,6 +1506,7 @@ const TOUR_STEPS: TourStep[] = [
     description:
       "Kattints a képedre, hogy sokszögeket rajzolj az interaktívvá tenni kívánt területek köré. Minden zónának saját hangja lehet. Kattints több pontra az alak megrajzolásához, majd kattints a kezdőponthoz közel a lezáráshoz.",
     placement: "left",
+    interactive: true,
   },
   {
     id: "zone-inventory",
@@ -2799,7 +2800,7 @@ const EditorView = ({
     };
   };
 
-  const handleStartDrawing = (e: React.MouseEvent) => {
+  const handleStartDrawing = (e: React.MouseEvent | React.TouchEvent) => {
     if (!project.imageUrl) return;
     if ((e.target as Element).tagName === "polygon") return;
     setIsDrawing(true);
@@ -2810,8 +2811,10 @@ const EditorView = ({
     engine.stopAll();
   };
 
-  const handleDrawMove = (e: React.MouseEvent) => {
+  const handleDrawMove = (e: React.MouseEvent | React.TouchEvent) => {
     if (!isDrawing) return;
+    // Prevent scrolling on touch move when drawing
+    if ('touches' in e) e.preventDefault();
     setCurrentPoints((prev) => [...prev, getRelativeCoordinates(e)]);
   };
 
@@ -2956,6 +2959,10 @@ const EditorView = ({
               onMouseMove={handleDrawMove}
               onMouseUp={handleStopDrawing}
               onMouseLeave={handleStopDrawing}
+              onTouchStart={handleStartDrawing}
+              onTouchMove={handleDrawMove}
+              onTouchEnd={handleStopDrawing}
+              onTouchCancel={handleStopDrawing}
             >
               <img
                 src={project.imageUrl}
