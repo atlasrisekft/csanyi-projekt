@@ -26,7 +26,7 @@ export const getUploadUrl = async (token: string, path: string) => {
         headers: getHeaders(token),
         body: JSON.stringify({ path })
     });
-    if (!res.ok) throw new Error("Feltöltési URL lekérése sikertelen");
+    if (!res.ok) throw new Error("Failed to get upload URL");
     return res.json();
 };
 
@@ -40,7 +40,7 @@ export const getSignedUrl = async (token: string, path: string) => {
         const errorText = await res.text();
         // Log as warning since missing files are handled gracefully in refreshProjectUrls
         console.warn('Could not get signed URL:', res.status, errorText, 'for path:', path);
-        throw new Error(`Aláírt URL lekérése sikertelen: ${res.status} ${errorText}`);
+        throw new Error(`Failed to get signed URL: ${res.status} ${errorText}`);
     }
     return res.json();
 };
@@ -63,7 +63,7 @@ export const uploadFile = async (token: string, file: File, path: string) => {
         if (!uploadRes.ok) {
             const errorText = await uploadRes.text();
             console.error('Upload failed:', uploadRes.status, errorText);
-            throw new Error(`Fájl feltöltése sikertelen: ${uploadRes.status} ${errorText}`);
+            throw new Error(`Failed to upload file: ${uploadRes.status} ${errorText}`);
         }
         
         // Return the sanitized path that was actually used
@@ -100,7 +100,7 @@ export const saveProjects = async (token: string, projects: any[]) => {
         headers: getHeaders(token),
         body: JSON.stringify({ projects: sanitizedProjects })
     });
-    if (!res.ok) throw new Error("A projektek mentése sikertelen");
+    if (!res.ok) throw new Error("Failed to save projects");
     return res.json();
 };
 
@@ -108,7 +108,7 @@ export const loadProjects = async (token: string) => {
     const res = await fetch(`${BASE_URL}/projects`, {
         headers: getHeaders(token)
     });
-    if (!res.ok) throw new Error("A projektek betöltése sikertelen");
+    if (!res.ok) throw new Error("Failed to load projects");
     const { projects } = await res.json();
     return projects;
 };
@@ -123,7 +123,7 @@ export const getSharedProject = async (shortId: string) => {
         }
     );
 
-    if (!res.ok) throw new Error("A projekt betöltése sikertelen");
+    if (!res.ok) throw new Error("Failed to load project");
 
     const { project } = await res.json();
     return project;
@@ -135,7 +135,7 @@ export const createShareLink = async (token: string, projectId: string) => {
         headers: getHeaders(token),
         body: JSON.stringify({ projectId })
     });
-    if (!res.ok) throw new Error("A megosztási link létrehozása sikertelen");
+    if (!res.ok) throw new Error("Failed to create share link");
     return res.json();
 };
 
@@ -143,7 +143,7 @@ export const getUserPreferences = async (token: string) => {
     const res = await fetch(`${BASE_URL}/user/preferences`, {
         headers: getHeaders(token)
     });
-    if (!res.ok) throw new Error("A beállítások betöltése sikertelen");
+    if (!res.ok) throw new Error("Failed to load preferences");
     const { preferences } = await res.json();
     return preferences;
 };
@@ -154,6 +154,83 @@ export const saveUserPreferences = async (token: string, preferences: any) => {
         headers: getHeaders(token),
         body: JSON.stringify(preferences)
     });
-    if (!res.ok) throw new Error("A beállítások mentése sikertelen");
+    if (!res.ok) throw new Error("Failed to save preferences");
     return res.json();
+};
+
+// ---------------------------------------------------------------------------
+// CURATOR GALLERIES
+// ---------------------------------------------------------------------------
+
+export const loadGalleries = async (token: string) => {
+    const res = await fetch(`${BASE_URL}/galleries`, { headers: getHeaders(token) });
+    if (!res.ok) throw new Error("Failed to load galleries");
+    const { galleries } = await res.json();
+    return galleries;
+};
+
+export const createGallery = async (token: string, title: string, description: string, projectIds: string[]) => {
+    const res = await fetch(`${BASE_URL}/galleries`, {
+        method: 'POST',
+        headers: getHeaders(token),
+        body: JSON.stringify({ title, description, projectIds })
+    });
+    if (!res.ok) throw new Error("Failed to create gallery");
+    return res.json();
+};
+
+export const updateGallery = async (token: string, galleryId: string, updates: { title?: string; description?: string; projectIds?: string[] }) => {
+    const res = await fetch(`${BASE_URL}/galleries/${galleryId}`, {
+        method: 'PUT',
+        headers: getHeaders(token),
+        body: JSON.stringify(updates)
+    });
+    if (!res.ok) throw new Error("Failed to update gallery");
+    return res.json();
+};
+
+export const deleteGallery = async (token: string, galleryId: string) => {
+    const res = await fetch(`${BASE_URL}/galleries/${galleryId}`, {
+        method: 'DELETE',
+        headers: getHeaders(token)
+    });
+    if (!res.ok) throw new Error("Failed to delete gallery");
+    return res.json();
+};
+
+export const createGalleryShareLink = async (token: string, galleryId: string) => {
+    const res = await fetch(`${BASE_URL}/gallery-share`, {
+        method: 'POST',
+        headers: getHeaders(token),
+        body: JSON.stringify({ galleryId })
+    });
+    if (!res.ok) throw new Error("Failed to create gallery share link");
+    return res.json();
+};
+
+export const getPublicGallery = async (shortId: string) => {
+    const res = await fetch(`${BASE_URL}/public/gallery?id=${shortId}`, {
+        headers: { Authorization: `Bearer ${publicAnonKey}` }
+    });
+    if (!res.ok) throw new Error("Failed to load gallery");
+    return res.json();
+};
+
+export const toggleProjectPublic = async (token: string, projectId: string, isPublic: boolean) => {
+    const res = await fetch(`${BASE_URL}/projects/${projectId}`, {
+        method: 'PATCH',
+        headers: getHeaders(token),
+        body: JSON.stringify({ isPublic })
+    });
+    if (!res.ok) throw new Error("Failed to toggle project visibility");
+    return res.json();
+};
+
+export const getPublicProjects = async () => {
+    const res = await fetch(`${BASE_URL}/public/projects`, {
+        headers: { Authorization: `Bearer ${publicAnonKey}` }
+    });
+    if (!res.ok) throw new Error("Failed to load public projects");
+    const { projects } = await res.json();
+    return projects;
 };
