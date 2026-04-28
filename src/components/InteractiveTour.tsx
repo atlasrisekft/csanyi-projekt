@@ -9,6 +9,10 @@ export type TourStep = {
   title: string;
   description: React.ReactNode;
   placement?: 'top' | 'bottom' | 'left' | 'right';
+  // When true, the overlay will allow pointer events to pass through to the
+  // highlighted element so the user can interact with it while the tooltip is
+  // shown (useful for interactive tutorials).
+  interactive?: boolean;
 };
 
 interface InteractiveTourProps {
@@ -25,6 +29,8 @@ export const InteractiveTour = ({ steps, currentStepIndex, isOpen, onNext, onClo
   const [tooltipStyle, setTooltipStyle] = useState<React.CSSProperties>({ opacity: 0, pointerEvents: 'none' });
   const tooltipRef = useRef<HTMLDivElement>(null);
   const step = steps[currentStepIndex];
+
+  const overlayPointerEvents = step?.interactive ? 'none' : undefined;
 
   // 1. Find Target Rect & Styles
   useLayoutEffect(() => {
@@ -156,7 +162,7 @@ export const InteractiveTour = ({ steps, currentStepIndex, isOpen, onNext, onClo
               left: 0,
               right: 0,
               height: targetRect.top - 4,
-              pointerEvents: targetRect.top - 4 > 0 ? 'auto' : 'none'
+              pointerEvents: overlayPointerEvents ?? (targetRect.top - 4 > 0 ? 'auto' : 'none')
             }}
           />
           {/* Bottom */}
@@ -167,7 +173,7 @@ export const InteractiveTour = ({ steps, currentStepIndex, isOpen, onNext, onClo
               left: 0,
               right: 0,
               bottom: 0,
-              pointerEvents: 'auto'
+              pointerEvents: overlayPointerEvents ?? 'auto'
             }}
           />
           {/* Left */}
@@ -178,7 +184,7 @@ export const InteractiveTour = ({ steps, currentStepIndex, isOpen, onNext, onClo
               left: 0,
               width: targetRect.left - 4,
               height: targetRect.height + 8,
-              pointerEvents: targetRect.left - 4 > 0 ? 'auto' : 'none'
+              pointerEvents: overlayPointerEvents ?? (targetRect.left - 4 > 0 ? 'auto' : 'none')
             }}
           />
           {/* Right */}
@@ -189,7 +195,7 @@ export const InteractiveTour = ({ steps, currentStepIndex, isOpen, onNext, onClo
               left: targetRect.right + 4,
               right: 0,
               height: targetRect.height + 8,
-              pointerEvents: 'auto'
+              pointerEvents: overlayPointerEvents ?? 'auto'
             }}
           />
           {/* Highlight border */}

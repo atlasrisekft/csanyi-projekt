@@ -17,7 +17,7 @@ app.use(
   cors({
     origin: "*",
     allowHeaders: ["Content-Type", "Authorization"],
-    allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     exposeHeaders: ["Content-Length"],
     maxAge: 600,
   })
@@ -609,10 +609,75 @@ app.get("/public/project", async (c) => {
   }
 });
 
+// Public list of shared projects for the root gallery
+app.get("/public/projects", async (c) => {
+  try {
+    const supabase = getSupabaseAdmin();
+
+    // Get active shares
+    const { data: shares, error: sharesError } = await supabase
+      .from("project_shares")
+      .select("project_id, short_id")
+      .eq("is_active", true);
+
+    if (sharesError) {
+      console.error("Failed to load shares:", sharesError);
+      return c.json({ projects: [] });
+    }
+
+    const sign = async (path?: string) => {
+      if (!path) return null;
+      const { data } = await supabase.storage
+        .from(BUCKET_NAME)
+        .createSignedUrl(path, 7200);
+      return data?.signedUrl ?? null;
+    };
+
+    const projects = [];
+
+    for (const s of shares || []) {
+      try {
+        const { data: projectRow } = await supabase
+          .from("projects")
+          .select("id, data")
+          .eq("id", s.project_id)
+          .single();
+
+        if (!projectRow) continue;
+
+        const p = { ...projectRow.data } as any;
+
+        let imageUrl = null;
+        if (p.imagePath) {
+          imageUrl = await sign(p.imagePath);
+        }
+
+        const hotspotCount = (p.hotspots || []).length || 0;
+
+        projects.push({
+          projectId: projectRow.id,
+          title: p.title || "Untitled",
+          imageUrl,
+          hotspotCount,
+          shareShortId: s.short_id || null,
+        });
+      } catch (e) {
+        console.warn("Skipping share due to error:", s, e);
+        continue;
+      }
+    }
+
+    return c.json({ projects });
+  } catch (err) {
+    console.error(err);
+    return c.json({ projects: [] }, 500);
+  }
+});
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+  "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
 };
 
 Deno.serve(async (req: Request) => {
