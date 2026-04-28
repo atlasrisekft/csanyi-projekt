@@ -747,7 +747,7 @@ export const SoundUploadModal = ({ open, onOpenChange, onLocalUpload, onLibraryS
                                                         <div className="flex-1 min-w-0 overflow-hidden">
                                                             <h4 className="font-medium text-sm truncate">{truncateText(sound.name, 25)}</h4>
                                                             <div className="flex items-center gap-2 text-xs text-slate-500 mt-0.5">
-                                                                <span className="truncate max-w-[80px]">by {sound.username}</span>
+                                                                <span className="truncate max-w-[80px]">Feltöltő: {sound.username}</span>
                                                                 <span>•</span>
                                                                 <span className="shrink-0">{formatDuration(sound.duration)}</span>
                                                             </div>

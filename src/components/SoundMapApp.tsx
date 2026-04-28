@@ -2345,7 +2345,7 @@ const GalleryView = ({
               <span className="hidden sm:inline text-sm font-medium">
                 {session?.user?.user_metadata?.full_name ||
                   session?.user?.email?.split("@")[0] ||
-                  "User"}
+                  "Felhasználó"}
               </span>
             </Button>
             <Button
