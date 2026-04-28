@@ -3335,6 +3335,16 @@ const PlayerView = ({
         role="main"
         aria-label={project.title || 'Interaktív hangtérkép'}
       >
+        <div className="absolute top-4 left-4 z-50" onClick={(e) => e.stopPropagation()}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleBack}
+            className="bg-black/20 text-white border-white/20 backdrop-blur-md hover:bg-black/40"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" /> Vissza a galériához
+          </Button>
+        </div>
         <span className="sr-only">
           {introPhase === 'idle'
             ? 'Interaktív hangtérkép. Érintsd meg a képernyőt a bevezetés meghallgatásához.'
