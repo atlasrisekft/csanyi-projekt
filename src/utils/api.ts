@@ -113,6 +113,15 @@ export const loadProjects = async (token: string) => {
     return projects;
 };
 
+export const deleteProject = async (token: string, projectId: string) => {
+    const res = await fetch(`${BASE_URL}/projects/${projectId}`, {
+        method: 'DELETE',
+        headers: getHeaders(token)
+    });
+    if (!res.ok) throw new Error("Failed to delete project");
+    return res.json();
+};
+
 export const getSharedProject = async (shortId: string) => {
     const res = await fetch(
         `${BASE_URL}/public/project?id=${shortId}`,

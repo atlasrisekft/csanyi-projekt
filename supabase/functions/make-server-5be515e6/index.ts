@@ -172,6 +172,39 @@ app.post("/projects", async (c) => {
   return c.json({ success: true });
 });
 
+app.delete("/projects/:id", async (c) => {
+  const { user, response } = await requireUser(c);
+  if (!user) return response;
+
+  const projectId = c.req.param("id");
+  const supabase = getSupabaseAdmin();
+
+  const { data: existing, error: fetchError } = await supabase
+    .from("projects")
+    .select("id")
+    .eq("id", projectId)
+    .eq("user_id", user.id)
+    .single();
+
+  if (fetchError || !existing) {
+    return c.json({ error: "Project not found" }, 404);
+  }
+
+  await supabase.from("project_shares").delete().eq("project_id", projectId);
+
+  const { error } = await supabase
+    .from("projects")
+    .delete()
+    .eq("id", projectId)
+    .eq("user_id", user.id);
+
+  if (error) {
+    return c.json({ error: error.message }, 500);
+  }
+
+  return c.json({ success: true });
+});
+
 app.patch("/projects/:id", async (c) => {
   const { user, response } = await requireUser(c);
   if (!user) return response;

@@ -495,7 +495,7 @@ export const SoundUploadModal = ({ open, onOpenChange, onLocalUpload, onLibraryS
                 <div className="flex border-b px-6">
                     <button
                         onClick={() => setActiveTab('local')}
-                        className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                        className={`flex-1 px-4 py-3 text-sm font-medium border-b-2 transition-colors text-center ${
                             activeTab === 'local'
                                 ? 'border-indigo-600 text-indigo-600'
                                 : 'border-transparent text-slate-500 hover:text-slate-700'
@@ -506,7 +506,7 @@ export const SoundUploadModal = ({ open, onOpenChange, onLocalUpload, onLibraryS
                     </button>
                     <button
                         onClick={() => setActiveTab('record')}
-                        className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                        className={`flex-1 px-4 py-3 text-sm font-medium border-b-2 transition-colors text-center ${
                             activeTab === 'record'
                                 ? 'border-indigo-600 text-indigo-600'
                                 : 'border-transparent text-slate-500 hover:text-slate-700'

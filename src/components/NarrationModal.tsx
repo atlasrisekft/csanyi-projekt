@@ -251,10 +251,10 @@ export const NarrationModal = ({ open, onClose, onSave, sessionUserId, projectId
                 </DialogHeader>
 
                 {/* Tabs */}
-                <div className="flex justify-center border-b px-6">
+                <div className="flex border-b px-6">
                     <button
                         onClick={() => setActiveTab('upload')}
-                        className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                        className={`flex-1 px-4 py-3 text-sm font-medium border-b-2 transition-colors text-center ${
                             activeTab === 'upload'
                                 ? 'border-indigo-600 text-indigo-600'
                                 : 'border-transparent text-slate-500 hover:text-slate-700'
@@ -265,7 +265,7 @@ export const NarrationModal = ({ open, onClose, onSave, sessionUserId, projectId
                     </button>
                     <button
                         onClick={() => setActiveTab('record')}
-                        className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                        className={`flex-1 px-4 py-3 text-sm font-medium border-b-2 transition-colors text-center ${
                             activeTab === 'record'
                                 ? 'border-indigo-600 text-indigo-600'
                                 : 'border-transparent text-slate-500 hover:text-slate-700'

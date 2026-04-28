@@ -63,6 +63,7 @@ import {
   saveUserPreferences,
   toggleProjectPublic,
   getPublicProjects,
+  deleteProject,
 } from "../utils/api";
 import { Card, CardContent } from "./ui/card";
 import { Input } from "./ui/input";
@@ -1139,7 +1140,8 @@ const SettingsPanelContent = ({
               </p>
             </div>
           ) : (
-            project.hotspots.map((h) => {
+            <>
+              {project.hotspots.map((h) => {
               const isOpen = selectedHotspotId === h.id;
               const isAdvancedOpen = advancedOpenIds.has(h.id);
               return (
@@ -1383,7 +1385,11 @@ const SettingsPanelContent = ({
                   )}
                 </div>
               );
-            })
+            })}
+              <p className="text-xs text-slate-400 text-center mt-1 px-2">
+                Új zóna létrehozásához rajzolj a képre.
+              </p>
+            </>
           )}
         </div>
       </div>
@@ -2053,11 +2059,20 @@ export const SoundMapApp = () => {
     });
   };
 
-  const handleDeleteProject = (id: string) => {
+  const handleDeleteProject = async (id: string) => {
+    const previous = projects;
     setProjects((prev) => prev.filter((p) => p.id !== id));
     if (currentProjectId === id) {
       setCurrentProjectId(null);
       setView("gallery");
+    }
+    if (!session?.access_token) return;
+    try {
+      await deleteProject(session.access_token, id);
+    } catch (e) {
+      console.error(e);
+      toast.error("A projekt törlése nem sikerült");
+      setProjects(previous);
     }
   };
 
