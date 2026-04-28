@@ -179,7 +179,7 @@ export const RootGalleryView = ({
 
       {isLoadingProject && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl p-6 flex items-center gap-3 shadow-2xl">
+          <div className="bg-white rounded-xl border border-slate-200 p-6 flex items-center gap-3 px-16 py-6 shadow-2xl">
             <Loader2 className="w-5 h-5 animate-spin text-indigo-600" />
             <span className="text-sm font-medium text-slate-700">Hangtérkép betöltése...</span>
           </div>
