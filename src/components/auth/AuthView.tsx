@@ -14,7 +14,7 @@ export const supabase = createClient(
   publicAnonKey
 );
 
-export const AuthView = ({ onLoginSuccess }: { onLoginSuccess: () => void }) => {
+export const AuthView = ({ onLoginSuccess, onBack }: { onLoginSuccess: () => void; onBack?: () => void }) => {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [mode, setMode] = useState<'login' | 'forgot' | 'forgot-sent' | 'recovery'>(() => {
@@ -195,6 +195,15 @@ export const AuthView = ({ onLoginSuccess }: { onLoginSuccess: () => void }) => 
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
+            {onBack && (
+                <button
+                    type="button"
+                    onClick={onBack}
+                    className="absolute top-4 left-4 text-sm text-slate-500 hover:text-indigo-600 flex items-center gap-1 transition-colors"
+                >
+                    ← Vissza a galériához
+                </button>
+            )}
             <Card className="w-full max-w-md shadow-xl">
                 <CardHeader className="text-center">
                     <CardTitle className="text-2xl font-bold text-indigo-600">Hangtérkép</CardTitle>

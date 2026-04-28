@@ -2141,27 +2141,15 @@ export const SoundMapApp = () => {
               .finally(() => setIsLoadingGalleryProject(false));
           }}
           isLoadingProject={isLoadingGalleryProject}
-          onLoginClick={() => setShowAuthModal(true)}
+          onLoginClick={() => setIsRootGalleryView(false)}
           onMyProjectsClick={() => setIsRootGalleryView(false)}
         />
-        {showAuthModal && (
-          <div
-            className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center"
-            onClick={() => setShowAuthModal(false)}
-          >
-            <div onClick={(e) => e.stopPropagation()}>
-              <AuthView onLoginSuccess={() => {
-                setShowAuthModal(false);
-              }} />
-            </div>
-          </div>
-        )}
       </>
     );
   }
 
   if (!session) {
-    return <AuthView onLoginSuccess={() => {}} />;
+    return <AuthView onLoginSuccess={() => {}} onBack={() => setIsRootGalleryView(true)} />;
   }
 
   if (view === "profile") {
@@ -2199,6 +2187,7 @@ export const SoundMapApp = () => {
           onProfile={() => setView("profile")}
           isLoading={isLoadingProjects}
           session={session}
+          onGoToPublicGallery={() => setIsRootGalleryView(true)}
         />
       )}
       {view === "player" && currentProject && (
@@ -2316,6 +2305,7 @@ const GalleryView = ({
   onProfile,
   isLoading,
   session,
+  onGoToPublicGallery,
 }: {
   projects: Project[];
   onCreate: () => void;
@@ -2324,6 +2314,7 @@ const GalleryView = ({
   onProfile: () => void;
   isLoading: boolean;
   session: any;
+  onGoToPublicGallery: () => void;
 }) => {
   return (
     <div className="min-h-screen bg-slate-50 p-8">
@@ -2336,6 +2327,14 @@ const GalleryView = ({
             </p>
           </div>
           <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              onClick={onGoToPublicGallery}
+              className="text-slate-500 hover:text-indigo-600 h-10 px-3 sm:px-4 flex items-center gap-2"
+            >
+              <ArrowLeft className="w-4 h-4 shrink-0" />
+              <span className="hidden sm:inline text-sm font-medium">Nyilvános galéria</span>
+            </Button>
             <Button
               variant="ghost"
               onClick={onProfile}
