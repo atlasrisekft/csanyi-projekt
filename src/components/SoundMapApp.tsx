@@ -576,9 +576,11 @@ const useAudioEngine = () => {
 const ShareDialogContent = ({
   session,
   project,
+  onTogglePublic,
 }: {
   session: any;
   project: Project;
+  onTogglePublic: (projectId: string, isPublic: boolean) => void;
 }) => {
   const [link, setLink] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -612,58 +614,72 @@ const ShareDialogContent = ({
   }
 
   return (
-    <div className="flex items-center space-x-2 mt-4">
-      <div className="grid flex-1 gap-2">
-        <label htmlFor="link" className="sr-only">
-          Link
-        </label>
-        <input
-          id="link"
-          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-          readOnly
-          value={link}
+    <div className="space-y-4 mt-4">
+      <div className="flex items-center space-x-2">
+        <div className="grid flex-1 gap-2">
+          <label htmlFor="link" className="sr-only">
+            Hivatkozás
+          </label>
+          <input
+            id="link"
+            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            readOnly
+            value={link}
+          />
+        </div>
+        <Button
+          size="sm"
+          className="px-3 gap-1"
+          onClick={async () => {
+            try {
+              await navigator.clipboard.writeText(link);
+            } catch (e) {
+              const input = document.getElementById("link") as HTMLInputElement;
+              if (input) {
+                input.select();
+                document.execCommand("copy");
+              }
+            }
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+          }}
+        >
+          {copied ? (
+            <>
+              <Check className="h-4 w-4" />
+              <span className="text-xs">Másolva</span>
+            </>
+          ) : (
+            <>
+              <Copy className="h-4 w-4" />
+              <span className="sr-only">Másolás</span>
+            </>
+          )}
+        </Button>
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          className="px-3"
+          onClick={() => {
+            window.open(link, "_blank");
+          }}
+        >
+          <ExternalLink className="h-4 w-4" />
+        </Button>
+      </div>
+      <div className="flex items-center justify-between rounded-lg border border-slate-200 p-3">
+        <div className="space-y-0.5">
+          <p className="text-sm font-medium">Megjelenés a nyilvános galériában</p>
+          <p className="text-xs text-slate-500">
+            Ha bekapcsolod, ez a projekt látható lesz a főoldalon mindenki számára.
+          </p>
+        </div>
+        <Switch
+          checked={project.isPublic ?? false}
+          onCheckedChange={(checked) => onTogglePublic(project.id, checked)}
         />
       </div>
-      <Button
-        size="sm"
-        className="px-3 gap-1"
-        onClick={async () => {
-          try {
-            await navigator.clipboard.writeText(link);
-          } catch (e) {
-            const input = document.getElementById("link") as HTMLInputElement;
-            if (input) {
-              input.select();
-              document.execCommand("copy");
-            }
-          }
-          setCopied(true);
-          setTimeout(() => setCopied(false), 2000);
-        }}
-      >
-        {copied ? (
-          <>
-            <Check className="h-4 w-4" />
-            <span className="text-xs">Copied</span>
-          </>
-        ) : (
-          <>
-            <Copy className="h-4 w-4" />
-            <span className="sr-only">Copy</span>
-          </>
-        )}
-      </Button>
-      <Button
-        type="button"
-        size="sm"
-        variant="outline"
-        className="px-3"
-        onClick={() => {
-          window.open(link, "_blank");
-        }}
-      >
-        <ExternalLink className="h-4 w-4" />
-      </Button>
     </div>
   );
 };
@@ -2123,12 +2139,12 @@ export const SoundMapApp = () => {
     );
     try {
       await toggleProjectPublic(session.access_token, projectId, isPublic);
-      toast.success(isPublic ? "Project is now public" : "Project is now private");
+      toast.success(isPublic ? "A projekt most nyilvános" : "A projekt most privát");
     } catch {
       setProjects((prev) =>
         prev.map((p) => (p.id === projectId ? { ...p, isPublic: !isPublic } : p))
       );
-      toast.error("Failed to update visibility");
+      toast.error("A láthatóság frissítése sikertelen");
     }
   };
 
@@ -2354,6 +2370,7 @@ export const SoundMapApp = () => {
           tourStepIndex={tourStepIndex}
           setTourStepIndex={setTourStepIndex}
           showOnboarding={showOnboarding}
+          onTogglePublic={handleTogglePublic}
         />
       )}
       {!currentProject && view !== "gallery" && (
@@ -2534,20 +2551,6 @@ const GalleryView = ({
                         {project.globalChannels?.length || 0} channels
                       </p>
                     </div>
-                    <div
-                      className="flex items-center gap-2 shrink-0 ml-2"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <span className="text-xs text-slate-400">
-                        {project.isPublic ? "Public" : "Private"}
-                      </span>
-                      <Switch
-                        checked={project.isPublic ?? false}
-                        onCheckedChange={(checked) =>
-                          onTogglePublic(project.id, checked)
-                        }
-                      />
-                    </div>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -2688,6 +2691,7 @@ const EditorView = ({
   tourStepIndex,
   setTourStepIndex,
   showOnboarding,
+  onTogglePublic,
 }: {
   project: Project;
   onUpdate: (p: Project | ((prev: Project) => Project)) => void;
@@ -2700,6 +2704,7 @@ const EditorView = ({
   tourStepIndex?: number;
   setTourStepIndex?: (index: number) => void;
   showOnboarding?: boolean;
+  onTogglePublic: (projectId: string, isPublic: boolean) => void;
 }) => {
   const [isDrawing, setIsDrawing] = useState(false);
   const [currentPoints, setCurrentPoints] = useState<Point[]>([]);
@@ -3047,18 +3052,18 @@ const EditorView = ({
                 id="tour-share-btn"
                 onClick={onShare}
               >
-                <Share2 className="w-4 h-4 mr-2" /> Share
+                <Share2 className="w-4 h-4 mr-2" /> Megosztás
               </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Share Project</DialogTitle>
+                <DialogTitle>Projekt megosztása</DialogTitle>
                 <DialogDescription>
-                  Anyone with this link can view and play your sound map.
-                  Perfect for tablets.
+                  Bárki megtekintheti és lejátszhatja a hangtérképedet ezzel a linkkel.
+                  Tökéletes tabletekhez.
                 </DialogDescription>
               </DialogHeader>
-              <ShareDialogContent session={session} project={project} />
+              <ShareDialogContent session={session} project={project} onTogglePublic={onTogglePublic} />
             </DialogContent>
           </Dialog>
 

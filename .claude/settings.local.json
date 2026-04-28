@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git checkout *)",
+      "Bash(node_modules/.bin/tsc --noEmit)",
+      "Bash(npm run *)"
+    ]
+  }
+}
