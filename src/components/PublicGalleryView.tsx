@@ -44,7 +44,7 @@ export const PublicGalleryView = ({ data, error, onOpenProject, isLoadingProject
       <div className="bg-white border-b border-slate-200">
         <div className="max-w-6xl mx-auto px-6 sm:px-8 py-14">
           <p className="text-xs font-semibold uppercase tracking-widest text-indigo-500 mb-3">
-            Sound Gallery
+            Hanggaléria
           </p>
           <h1 className="text-4xl sm:text-5xl font-bold text-slate-900 mb-4 leading-tight">
             {data.gallery.title}
@@ -61,7 +61,7 @@ export const PublicGalleryView = ({ data, error, onOpenProject, isLoadingProject
       <div className="max-w-6xl mx-auto px-6 sm:px-8 py-12">
         {data.projects.length === 0 ? (
           <p className="text-slate-400 text-center py-20">
-            This gallery has no sound maps yet.
+            Ez a galéria még nem tartalmaz hangtérképeket.
           </p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -90,11 +90,11 @@ export const PublicGalleryView = ({ data, error, onOpenProject, isLoadingProject
                     {p.shareShortId ? (
                       <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-white/95 backdrop-blur-sm rounded-full px-5 py-2.5 flex items-center gap-2 text-sm font-semibold text-slate-800 shadow-lg">
                         <Headphones className="w-4 h-4" />
-                        Explore
+                        Felfedezés
                       </div>
                     ) : (
                       <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-black/60 rounded-full px-4 py-2 text-xs text-white">
-                        Not available
+                        Nem elérhető
                       </div>
                     )}
                   </div>
@@ -106,8 +106,7 @@ export const PublicGalleryView = ({ data, error, onOpenProject, isLoadingProject
                     {p.title}
                   </h3>
                   <p className="text-xs text-slate-400 mt-1">
-                    {p.hotspotCount} interactive{' '}
-                    {p.hotspotCount === 1 ? 'zone' : 'zones'}
+                    {p.hotspotCount} interaktív zóna
                   </p>
                 </div>
               </button>
@@ -118,7 +117,7 @@ export const PublicGalleryView = ({ data, error, onOpenProject, isLoadingProject
 
       {/* Footer */}
       <div className="border-t border-slate-200 py-8 text-center">
-        <p className="text-xs text-slate-400">Powered by Sound Atlas</p>
+        <p className="text-xs text-slate-400">Sound Atlas</p>
       </div>
 
       {/* Loading overlay when opening a project */}
@@ -126,7 +125,7 @@ export const PublicGalleryView = ({ data, error, onOpenProject, isLoadingProject
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 backdrop-blur-sm">
           <div className="bg-white rounded-2xl p-6 flex items-center gap-3 shadow-2xl">
             <Loader2 className="w-5 h-5 animate-spin text-indigo-600" />
-            <span className="text-sm font-medium text-slate-700">Loading sound map...</span>
+            <span className="text-sm font-medium text-slate-700">Hangtérkép betöltése...</span>
           </div>
         </div>
       )}

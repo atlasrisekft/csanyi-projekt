@@ -45,24 +45,24 @@ const GalleryShareDialog = ({ gallery, session, open, onOpenChange }: ShareDialo
       .then(({ shortId }: { shortId: string }) => {
         setShareLink(`${window.location.origin}/g/${shortId}`);
       })
-      .catch(() => toast.error('Failed to create share link'))
+      .catch(() => toast.error('Nem sikerült létrehozni a megosztási linket'))
       .finally(() => setIsLoading(false));
   }, [open, gallery.id, session?.access_token]);
 
   const copyLink = () => {
     if (!shareLink) return;
     navigator.clipboard.writeText(shareLink);
-    toast.success('Link copied!');
+    toast.success('Link másolva!');
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Share "{gallery.title}"</DialogTitle>
+          <DialogTitle>„{gallery.title}" megosztása</DialogTitle>
         </DialogHeader>
         <p className="text-sm text-slate-500 mb-4">
-          Anyone with this link can browse your gallery.
+          Bárki, akinek van ez a linkje, böngészhet a galériában.
         </p>
         {isLoading ? (
           <div className="flex items-center justify-center py-4">
@@ -75,10 +75,10 @@ const GalleryShareDialog = ({ gallery, session, open, onOpenChange }: ShareDialo
               value={shareLink}
               className="flex-1 text-sm bg-slate-100 rounded-lg px-3 py-2 outline-none text-slate-700 min-w-0"
             />
-            <Button size="icon" variant="outline" onClick={copyLink} title="Copy link">
+            <Button size="icon" variant="outline" onClick={copyLink} title="Link másolása">
               <Copy className="w-4 h-4" />
             </Button>
-            <Button size="icon" variant="outline" onClick={() => window.open(shareLink, '_blank')} title="Open in new tab">
+            <Button size="icon" variant="outline" onClick={() => window.open(shareLink, '_blank')} title="Megnyitás új lapon">
               <ExternalLink className="w-4 h-4" />
             </Button>
           </div>
@@ -112,9 +112,9 @@ export const CuratorGalleriesView = ({
               <ArrowLeft className="w-5 h-5" />
             </Button>
             <div>
-              <h1 className="text-3xl font-bold text-slate-900">My Galleries</h1>
+              <h1 className="text-3xl font-bold text-slate-900">Galériáim</h1>
               <p className="text-slate-500 mt-1">
-                Curate and share collections of your sound maps.
+                Rendezd és oszd meg hangtérkép-gyűjteményeidet.
               </p>
             </div>
           </div>
@@ -123,26 +123,26 @@ export const CuratorGalleriesView = ({
             className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shrink-0 rounded-full h-12 w-12 p-0 sm:rounded-md sm:h-10 sm:w-auto sm:px-4 flex items-center justify-center"
           >
             <Plus className="w-6 h-6 sm:w-5 sm:h-5 sm:mr-2" />
-            <span className="hidden sm:inline">New Gallery</span>
+            <span className="hidden sm:inline">Új galéria</span>
           </Button>
         </div>
 
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-20 text-slate-500">
             <Loader2 className="w-8 h-8 animate-spin text-indigo-600 mb-4" />
-            <p>Loading galleries...</p>
+            <p>Galériák betöltése...</p>
           </div>
         ) : galleries.length === 0 ? (
           <div className="py-20 text-center bg-white rounded-xl border border-dashed border-slate-300">
             <div className="mx-auto w-16 h-16 bg-indigo-50 rounded-full flex items-center justify-center mb-4">
               <LayoutGrid className="w-8 h-8 text-indigo-500" />
             </div>
-            <h3 className="text-lg font-medium text-slate-900">No galleries yet</h3>
+            <h3 className="text-lg font-medium text-slate-900">Még nincsenek galériák</h3>
             <p className="text-sm text-slate-500 mt-1">
-              Create a gallery to curate and share your sound maps.
+              Hozz létre galériát a hangtérképeid rendezéséhez és megosztásához.
             </p>
             <Button onClick={onCreate} variant="outline" className="mt-4">
-              Create Gallery
+              Galéria létrehozása
             </Button>
           </div>
         ) : (
@@ -163,8 +163,7 @@ export const CuratorGalleriesView = ({
                     <div className="flex-1 cursor-pointer min-w-0" onClick={() => onEdit(gallery.id)}>
                       <h3 className="font-semibold text-slate-800 truncate">{gallery.title}</h3>
                       <p className="text-xs text-slate-500 mt-0.5">
-                        {gallery.projectIds.length}{' '}
-                        {gallery.projectIds.length === 1 ? 'sound map' : 'sound maps'}
+                        {gallery.projectIds.length} hangtérkép
                       </p>
                       {gallery.description && (
                         <p className="text-xs text-slate-400 mt-1.5 line-clamp-2 leading-relaxed">
@@ -180,10 +179,10 @@ export const CuratorGalleriesView = ({
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem onClick={() => onEdit(gallery.id)}>
-                          <Edit3 className="w-4 h-4 mr-2" /> Edit
+                          <Edit3 className="w-4 h-4 mr-2" /> Szerkesztés
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => setShareGallery(gallery)}>
-                          <Share2 className="w-4 h-4 mr-2" /> Share link
+                          <Share2 className="w-4 h-4 mr-2" /> Megosztási link
                         </DropdownMenuItem>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
@@ -191,24 +190,23 @@ export const CuratorGalleriesView = ({
                               className="text-red-600"
                               onSelect={(e) => e.preventDefault()}
                             >
-                              <Trash2 className="w-4 h-4 mr-2" /> Delete
+                              <Trash2 className="w-4 h-4 mr-2" /> Törlés
                             </DropdownMenuItem>
                           </AlertDialogTrigger>
                           <AlertDialogContent>
                             <AlertDialogHeader>
-                              <AlertDialogTitle>Delete gallery?</AlertDialogTitle>
+                              <AlertDialogTitle>Galéria törlése?</AlertDialogTitle>
                               <AlertDialogDescription>
-                                This will permanently delete "{gallery.title}". Your sound maps
-                                will not be affected.
+                                Ez véglegesen törli a(z) „{gallery.title}" galériát. A hangtérképeid nem érintettek.
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogCancel>Mégse</AlertDialogCancel>
                               <AlertDialogAction
                                 className="bg-red-600 hover:bg-red-700 text-white"
                                 onClick={() => onDelete(gallery.id)}
                               >
-                                Delete
+                                Törlés
                               </AlertDialogAction>
                             </AlertDialogFooter>
                           </AlertDialogContent>

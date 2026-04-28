@@ -37,13 +37,13 @@ export const CuratorGalleryEditorView = ({ gallery, allProjects, onSave, onBack 
   const add = (id: string) => setProjectIds((prev) => [...prev, id]);
 
   const handleSave = async () => {
-    if (!title.trim()) { toast.error('Gallery needs a title'); return; }
+    if (!title.trim()) { toast.error('A galériának kötelező cím'); return; }
     setIsSaving(true);
     try {
       await onSave({ ...gallery, title: title.trim(), description, projectIds });
-      toast.success('Gallery saved');
+      toast.success('Galéria mentve');
     } catch {
-      toast.error('Failed to save');
+      toast.error('Mentés sikertelen');
     } finally {
       setIsSaving(false);
     }
@@ -57,7 +57,7 @@ export const CuratorGalleryEditorView = ({ gallery, allProjects, onSave, onBack 
           <Button variant="ghost" size="icon" onClick={onBack}>
             <ArrowLeft className="w-5 h-5" />
           </Button>
-          <h1 className="text-2xl font-bold text-slate-900 flex-1">Edit Gallery</h1>
+          <h1 className="text-2xl font-bold text-slate-900 flex-1">Galéria szerkesztése</h1>
           <Button
             onClick={handleSave}
             disabled={isSaving}
@@ -66,7 +66,7 @@ export const CuratorGalleryEditorView = ({ gallery, allProjects, onSave, onBack 
             {isSaving
               ? <Loader2 className="w-4 h-4 mr-2 animate-spin" />
               : <Save className="w-4 h-4 mr-2" />}
-            Save
+            Mentés
           </Button>
         </div>
 
@@ -74,25 +74,25 @@ export const CuratorGalleryEditorView = ({ gallery, allProjects, onSave, onBack 
         <div className="bg-white rounded-xl border border-slate-200 p-6 mb-6 space-y-4">
           <div>
             <label className="text-sm font-medium text-slate-700 block mb-1.5">
-              Gallery Title
+              Galéria neve
             </label>
             <input
               className="w-full bg-slate-100 rounded-lg px-3 py-2 text-sm text-slate-800 outline-none focus:ring-2 focus:ring-indigo-300"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="e.g. Summer Exhibition 2025"
+              placeholder="pl. Nyári kiállítás 2025"
             />
           </div>
           <div>
             <label className="text-sm font-medium text-slate-700 block mb-1.5">
-              Description
+              Leírás
             </label>
             <textarea
               className="w-full bg-slate-100 rounded-lg px-3 py-2 text-sm text-slate-500 outline-none resize-none focus:ring-2 focus:ring-indigo-300"
               rows={3}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Describe this collection for visitors..."
+              placeholder="Írd le ezt a gyűjteményt a látogatóknak..."
             />
           </div>
         </div>
@@ -100,12 +100,12 @@ export const CuratorGalleryEditorView = ({ gallery, allProjects, onSave, onBack 
         {/* Selected projects */}
         <div className="bg-white rounded-xl border border-slate-200 p-6 mb-6">
           <h2 className="text-sm font-semibold text-slate-900 mb-4">
-            Sound Maps in This Gallery{' '}
+            Hangtérképek ebben a galériában{' '}
             <span className="text-slate-400 font-normal">({selectedProjects.length})</span>
           </h2>
           {selectedProjects.length === 0 ? (
             <p className="text-sm text-slate-400 text-center py-6">
-              No sound maps added yet. Pick some below.
+              Még nem adtál hozzá hangtérképet. Válassz egyet alul.
             </p>
           ) : (
             <ul className="space-y-2">
@@ -154,7 +154,7 @@ export const CuratorGalleryEditorView = ({ gallery, allProjects, onSave, onBack 
         {/* Available projects */}
         {availableProjects.length > 0 && (
           <div className="bg-white rounded-xl border border-slate-200 p-6">
-            <h2 className="text-sm font-semibold text-slate-900 mb-4">Add Sound Maps</h2>
+            <h2 className="text-sm font-semibold text-slate-900 mb-4">Hangtérképek hozzáadása</h2>
             <ul className="space-y-2">
               {availableProjects.map((p) => (
                 <li
@@ -174,7 +174,7 @@ export const CuratorGalleryEditorView = ({ gallery, allProjects, onSave, onBack 
                     className="shrink-0"
                     onClick={() => add(p.id)}
                   >
-                    <Plus className="w-3.5 h-3.5 mr-1" /> Add
+                    <Plus className="w-3.5 h-3.5 mr-1" /> Hozzáadás
                   </Button>
                 </li>
               ))}
