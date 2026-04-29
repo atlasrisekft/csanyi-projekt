@@ -5,8 +5,9 @@ import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "../ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
-import { Loader2, AlertCircle } from "lucide-react";
+import { Loader2, AlertCircle, ArrowLeft } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
+import { AppHeader } from "../AppHeader";
 import { projectId, publicAnonKey } from '../../utils/supabase/info';
 
 export const supabase = createClient(
@@ -194,16 +195,24 @@ export const AuthView = ({ onLoginSuccess, onBack }: { onLoginSuccess: () => voi
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
-            {onBack && (
-                <button
-                    type="button"
-                    onClick={onBack}
-                    className="absolute top-4 left-4 text-sm text-slate-500 hover:text-indigo-600 flex items-center gap-1 transition-colors"
-                >
-                    ← Vissza a galériához
-                </button>
-            )}
+        <div className="min-h-screen flex flex-col bg-slate-50">
+            <AppHeader
+                onBrandClick={onBack}
+                description="Bejelentkezés vagy fiók létrehozása"
+            >
+                {onBack && (
+                    <Button
+                        variant="ghost"
+                        onClick={onBack}
+                        aria-label="Vissza a galériához"
+                        className="text-slate-500 hover:text-indigo-600 h-10 w-10 p-0 sm:w-auto sm:px-3 flex items-center justify-center gap-2"
+                    >
+                        <ArrowLeft className="w-4 h-4 shrink-0" aria-hidden="true" />
+                        <span className="hidden sm:inline text-sm font-medium">Vissza a galériához</span>
+                    </Button>
+                )}
+            </AppHeader>
+            <main id="main-content" role="main" className="flex-1 flex items-center justify-center p-4">
             <Card className="w-full max-w-md shadow-xl">
                 <CardHeader className="text-center">
                     <CardTitle className="text-2xl font-bold text-indigo-600">Hangtérkép</CardTitle>
@@ -347,6 +356,7 @@ export const AuthView = ({ onLoginSuccess, onBack }: { onLoginSuccess: () => voi
                     )}
                 </CardContent>
             </Card>
+            </main>
         </div>
     );
 };

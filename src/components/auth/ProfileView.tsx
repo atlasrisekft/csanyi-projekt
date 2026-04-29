@@ -3,6 +3,7 @@ import { supabase } from './AuthView';
 import { Button } from "../ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../ui/card";
 import { User, LogOut, ArrowLeft, HelpCircle } from "lucide-react";
+import { AppHeader } from "../AppHeader";
 
 export const ProfileView = ({ onBack, onSignOut, onShowOnboarding }: { onBack: () => void, onSignOut: () => void, onShowOnboarding?: () => void }) => {
     const [user, setUser] = useState<any>(null);
@@ -26,11 +27,23 @@ export const ProfileView = ({ onBack, onSignOut, onShowOnboarding }: { onBack: (
     if (!user) return <div className="p-8 text-center">Profil betöltése...</div>;
 
     return (
-        <div className="min-h-screen bg-slate-50 p-4 sm:p-8">
-            <div className="max-w-2xl mx-auto space-y-6">
-                <Button variant="ghost" onClick={onBack} className="mb-4 pl-0 hover:bg-transparent hover:text-indigo-600">
-                    <ArrowLeft className="w-4 h-4 mr-2" /> Vissza a galériához
+        <div className="min-h-screen bg-slate-50">
+            <AppHeader
+                onBrandClick={onBack}
+                description="Profil és fiókbeállítások"
+            >
+                <Button
+                    variant="ghost"
+                    onClick={onBack}
+                    aria-label="Vissza a galériához"
+                    className="text-slate-500 hover:text-indigo-600 h-10 w-10 p-0 sm:w-auto sm:px-3 flex items-center justify-center gap-2"
+                >
+                    <ArrowLeft className="w-4 h-4 shrink-0" aria-hidden="true" />
+                    <span className="hidden sm:inline text-sm font-medium">Vissza a galériához</span>
                 </Button>
+            </AppHeader>
+
+            <main id="main-content" role="main" className="max-w-2xl mx-auto p-4 sm:p-8 space-y-6">
 
                 <Card>
                     <CardHeader>
@@ -65,7 +78,7 @@ export const ProfileView = ({ onBack, onSignOut, onShowOnboarding }: { onBack: (
                 </Card>
 
                 {/* Admin controls removed */}
-            </div>
+            </main>
         </div>
     );
 };

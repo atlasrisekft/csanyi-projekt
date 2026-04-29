@@ -86,6 +86,7 @@ import {
 } from "./ui/drawer";
 import { toast } from "sonner";
 import { RootGalleryView } from "./RootGalleryView";
+import { AppHeader } from "./AppHeader";
 import type { PublicGalleryProject } from "./PublicGalleryView";
 
 // ---------------------------------------------------------------------------
@@ -2333,45 +2334,50 @@ const GalleryView = ({
   onGoToPublicGallery: () => void;
 }) => {
   return (
-    <div className="min-h-screen bg-slate-50 p-8">
-      <div className="max-w-6xl mx-auto">
-        <div className="flex items-center justify-between mb-8 gap-8">
-          <div>
-            <h1 className="text-3xl font-bold text-slate-900">Projektjeim</h1>
-            <p className="text-slate-500 mt-1">
-              Válassz ki egy hangtérképet szerkesztéshez, vagy hozz létre egy újat.
-            </p>
-          </div>
-          <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              onClick={onGoToPublicGallery}
-              className="text-slate-500 hover:text-indigo-600 h-10 px-3 sm:px-4 flex items-center gap-2"
-            >
-              <ArrowLeft className="w-4 h-4 shrink-0" />
-              <span className="hidden sm:inline text-sm font-medium">Nyilvános galéria</span>
-            </Button>
-            <Button
-              variant="ghost"
-              onClick={onProfile}
-              className="text-slate-500 hover:text-indigo-600 h-12 sm:h-10 px-3 sm:px-4 flex items-center gap-2"
-            >
-              <UserIcon className="w-7 h-7 sm:w-6 sm:h-6 shrink-0" />
-              <span className="hidden sm:inline text-sm font-medium">
-                {session?.user?.user_metadata?.full_name ||
-                  session?.user?.email?.split("@")[0] ||
-                  "Felhasználó"}
-              </span>
-            </Button>
-            <Button
-              id="tour-create-project"
-              onClick={onCreate}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shrink-0 rounded-full h-12 w-12 p-0 sm:rounded-md sm:h-10 sm:w-auto sm:px-4 flex items-center justify-center"
-            >
-              <Plus className="w-6 h-6 sm:w-5 sm:h-5 sm:mr-2" />
-              <span className="hidden sm:inline">Új projekt</span>
-            </Button>
-          </div>
+    <div className="min-h-screen bg-slate-50">
+      <AppHeader
+        onBrandClick={onGoToPublicGallery}
+        description="Saját projektjeid kezelése — készíts és szerkessz hangtérképeket"
+      >
+        <Button
+          variant="ghost"
+          onClick={onGoToPublicGallery}
+          aria-label="Vissza a nyilvános galériához"
+          className="text-slate-500 hover:text-indigo-600 h-10 w-10 p-0 sm:w-auto sm:px-3 flex items-center justify-center gap-2"
+        >
+          <ArrowLeft className="w-4 h-4 shrink-0" aria-hidden="true" />
+          <span className="hidden sm:inline text-sm font-medium">Nyilvános galéria</span>
+        </Button>
+        <Button
+          variant="ghost"
+          onClick={onProfile}
+          aria-label="Profil megnyitása"
+          className="text-slate-500 hover:text-indigo-600 h-10 w-10 p-0 sm:w-auto sm:px-3 flex items-center justify-center gap-2"
+        >
+          <UserIcon className="w-5 h-5 shrink-0" aria-hidden="true" />
+          <span className="hidden sm:inline text-sm font-medium">
+            {session?.user?.user_metadata?.full_name ||
+              session?.user?.email?.split("@")[0] ||
+              "Felhasználó"}
+          </span>
+        </Button>
+        <Button
+          id="tour-create-project"
+          onClick={onCreate}
+          aria-label="Új projekt létrehozása"
+          className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm shrink-0 rounded-full h-10 w-10 p-0 sm:rounded-md sm:w-auto sm:px-4 flex items-center justify-center gap-2"
+        >
+          <Plus className="w-4 h-4" aria-hidden="true" />
+          <span className="hidden sm:inline">Új projekt</span>
+        </Button>
+      </AppHeader>
+
+      <main id="main-content" role="main" className="max-w-6xl mx-auto p-8">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-slate-900">Projektjeim</h1>
+          <p className="text-slate-500 mt-1">
+            Válassz ki egy hangtérképet szerkesztéshez, vagy hozz létre egy újat.
+          </p>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {isLoading ? (
@@ -2468,7 +2474,7 @@ const GalleryView = ({
             </div>
           )}
         </div>
-      </div>
+      </main>
     </div>
   );
 };
