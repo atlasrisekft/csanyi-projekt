@@ -215,7 +215,7 @@ export const InteractiveTour = ({ steps, currentStepIndex, isOpen, onNext, onClo
       {/* Tooltip */}
       <div 
         ref={tooltipRef}
-        className="bg-white p-4 rounded-lg shadow-xl w-[20rem] max-w-[calc(100vw-20px)] transition-all duration-300 ease-out flex flex-col gap-3"
+        className="bg-white p-4 rounded-lg w-[20rem] max-w-[calc(100vw-20px)] transition-all duration-300 ease-out flex flex-col gap-3"
         style={tooltipStyle}
       >
          <div className="flex justify-between items-start gap-2">

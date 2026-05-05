@@ -167,6 +167,18 @@ export const saveUserPreferences = async (token: string, preferences: any) => {
     return res.json();
 };
 
+export const getPublicProjectById = async (projectId: string) => {
+    const res = await fetch(
+        `${BASE_URL}/public/project-by-id?id=${projectId}`,
+        {
+            headers: { Authorization: `Bearer ${publicAnonKey}` }
+        }
+    );
+    if (!res.ok) throw new Error("Failed to fetch project");
+    const { project } = await res.json();
+    return project;
+};
+
 // ---------------------------------------------------------------------------
 // CURATOR GALLERIES
 // ---------------------------------------------------------------------------

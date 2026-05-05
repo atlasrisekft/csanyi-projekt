@@ -147,7 +147,7 @@ export const AuthView = ({ onLoginSuccess, onBack }: { onLoginSuccess: () => voi
     if (mode === 'recovery') {
         return (
             <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
-                <Card className="w-full max-w-md shadow-xl">
+                <Card className="w-full max-w-md">
                     <CardHeader className="text-center">
                         <CardTitle className="text-2xl font-bold text-indigo-600">Új jelszó beállítása</CardTitle>
                         <CardDescription>Add meg az új jelszavadat</CardDescription>
@@ -213,7 +213,7 @@ export const AuthView = ({ onLoginSuccess, onBack }: { onLoginSuccess: () => voi
                 )}
             </AppHeader>
             <main id="main-content" role="main" className="flex-1 flex items-center justify-center p-4">
-            <Card className="w-full max-w-md shadow-xl">
+            <Card className="w-full max-w-md">
                 <CardHeader className="text-center">
                     <CardTitle className="text-2xl font-bold text-indigo-600">Hangtérkép</CardTitle>
                     <CardDescription>Jelentkezz be a hangprojektjeid kezeléséhez</CardDescription>

@@ -112,9 +112,9 @@ export const CuratorGalleryEditorView = ({ gallery, allProjects, onSave, onBack 
               {selectedProjects.map((p, i) => (
                 <li
                   key={p.id}
-                  className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50"
+                  className="flex items-center p-2 rounded-lg hover:bg-slate-50"
                 >
-                  <div className="w-10 h-10 rounded-md bg-slate-100 overflow-hidden shrink-0 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-md bg-slate-100 overflow-hidden shrink-0 mr-1 flex items-center justify-center">
                     {p.imageUrl
                       ? <img src={p.imageUrl} alt={p.title} className="w-full h-full object-cover" />
                       : <ImageIcon className="w-5 h-5 text-slate-300" />}
@@ -122,7 +122,7 @@ export const CuratorGalleryEditorView = ({ gallery, allProjects, onSave, onBack 
                   <span className="flex-1 text-sm font-medium text-slate-800 truncate">
                     {p.title}
                   </span>
-                  <div className="flex items-center gap-1 shrink-0">
+                  <div className="flex items-center gap-1 shrink-0 ml-2">
                     <Button
                       variant="ghost" size="icon" className="h-7 w-7"
                       onClick={() => move(i, 'up')}
@@ -159,9 +159,9 @@ export const CuratorGalleryEditorView = ({ gallery, allProjects, onSave, onBack 
               {availableProjects.map((p) => (
                 <li
                   key={p.id}
-                  className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50"
+                  className="flex items-center p-2 rounded-lg hover:bg-slate-50"
                 >
-                  <div className="w-10 h-10 rounded-md bg-slate-100 overflow-hidden shrink-0 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-md bg-slate-100 overflow-hidden shrink-0 mr-1 flex items-center justify-center">
                     {p.imageUrl
                       ? <img src={p.imageUrl} alt={p.title} className="w-full h-full object-cover" />
                       : <ImageIcon className="w-5 h-5 text-slate-300" />}
@@ -171,7 +171,7 @@ export const CuratorGalleryEditorView = ({ gallery, allProjects, onSave, onBack 
                   </span>
                   <Button
                     size="sm" variant="outline"
-                    className="shrink-0"
+                    className="shrink-0 ml-2"
                     onClick={() => add(p.id)}
                   >
                     <Plus className="w-3.5 h-3.5 mr-1" /> Hozzáadás

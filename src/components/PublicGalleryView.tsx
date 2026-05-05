@@ -6,7 +6,7 @@ export type PublicGalleryProject = {
   title: string;
   imageUrl: string | null;
   hotspotCount: number;
-  shareShortId: string | null;
+  shareShortId?: string | null;
 };
 
 export type PublicGalleryData = {
@@ -17,7 +17,7 @@ export type PublicGalleryData = {
 interface Props {
   data: PublicGalleryData | null;
   error: string | null;
-  onOpenProject: (shareShortId: string) => void;
+onOpenProject: (projectId: string) => void;
   isLoadingProject: boolean;
 }
 
@@ -68,10 +68,8 @@ export const PublicGalleryView = ({ data, error, onOpenProject, isLoadingProject
             {data.projects.map((p) => (
               <button
                 key={p.projectId}
-                className="group text-left bg-white rounded-2xl border border-slate-200 overflow-hidden hover:shadow-xl transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-indigo-400"
-                onClick={() => {
-                  if (p.shareShortId) onOpenProject(p.shareShortId);
-                }}
+                className="group text-left bg-white rounded-2xl border border-slate-200 hover:border-indigo-300 overflow-hidden transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                onClick={() => onOpenProject(p.projectId)}
                 disabled={!p.shareShortId}
               >
                 {/* Thumbnail */}
@@ -88,7 +86,7 @@ export const PublicGalleryView = ({ data, error, onOpenProject, isLoadingProject
                   {/* Hover overlay */}
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/25 transition-colors duration-300 flex items-center justify-center">
                     {p.shareShortId ? (
-                      <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-white/95 backdrop-blur-sm rounded-full px-5 py-2.5 flex items-center gap-2 text-sm font-semibold text-slate-800 shadow-lg">
+                      <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-white/95 backdrop-blur-sm rounded-full px-5 py-2.5 flex items-center gap-2 text-sm font-semibold text-slate-800">
                         <Headphones className="w-4 h-4" />
                         Felfedezés
                       </div>
@@ -123,7 +121,7 @@ export const PublicGalleryView = ({ data, error, onOpenProject, isLoadingProject
       {/* Loading overlay when opening a project */}
       {isLoadingProject && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl p-6 flex items-center gap-3 shadow-2xl">
+          <div className="bg-white rounded-2xl p-6 flex items-center gap-3">
             <Loader2 className="w-5 h-5 animate-spin text-indigo-600" />
             <span className="text-sm font-medium text-slate-700">Hangtérkép betöltése...</span>
           </div>

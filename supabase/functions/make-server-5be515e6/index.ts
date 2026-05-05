@@ -214,15 +214,15 @@ app.patch("/projects/:id", async (c) => {
 
   const supabase = getSupabaseAdmin();
 
-  // Verify ownership
-  const { data: existing, error: fetchError } = await supabase
+  // verify ownership
+  const { data: existing } = await supabase
     .from("projects")
     .select("id")
     .eq("id", projectId)
     .eq("user_id", user.id)
     .single();
 
-  if (fetchError || !existing) {
+  if (!existing) {
     return c.json({ error: "Project not found" }, 404);
   }
 
@@ -235,29 +235,7 @@ app.patch("/projects/:id", async (c) => {
     return c.json({ error: error.message }, 500);
   }
 
-  // Auto-create share link when making public
-  let shareShortId: string | null = null;
-  if (isPublic) {
-    const { data: existingShare } = await supabase
-      .from("project_shares")
-      .select("short_id")
-      .eq("project_id", projectId)
-      .eq("is_active", true)
-      .single();
-
-    if (existingShare) {
-      shareShortId = existingShare.short_id;
-    } else {
-      shareShortId = crypto.randomUUID().slice(0, 10);
-      await supabase.from("project_shares").insert({
-        short_id: shareShortId,
-        project_id: projectId,
-        is_active: true,
-      });
-    }
-  }
-
-  return c.json({ success: true, shareShortId });
+  return c.json({ success: true });
 });
 
 // Signup Route (Auto-confirm email)
@@ -286,6 +264,59 @@ app.post("/signup", async (c) => {
     return c.json({ data });
   } catch (err) {
     console.error("Unexpected signup error:", err);
+    return c.json({ error: "Internal server error" }, 500);
+  }
+});
+
+app.get("/public/project-by-id", async (c) => {
+  try {
+    const projectId = c.req.query("id");
+    if (!projectId) {
+      return c.json({ error: "Missing ID" }, 400);
+    }
+
+    const supabase = getSupabaseAdmin();
+
+    const { data: projectRow } = await supabase
+      .from("projects")
+      .select("data, is_public")
+      .eq("id", projectId)
+      .single();
+
+    if (!projectRow || !projectRow.is_public) {
+      return c.json({ error: "Not found" }, 404);
+    }
+
+    const p = { ...projectRow.data };
+
+    const sign = async (path?: string) => {
+      if (!path) return null;
+      const { data } = await supabase.storage
+        .from(BUCKET_NAME)
+        .createSignedUrl(path, 7200);
+      return data?.signedUrl ?? null;
+    };
+
+    if (p.imagePath) p.imageUrl = await sign(p.imagePath);
+    if (p.introAudioPath) p.introAudioUrl = await sign(p.introAudioPath);
+
+    p.hotspots = await Promise.all(
+      (p.hotspots || []).map(async (h: any) => {
+        if (h.audioPath) h.audioUrl = await sign(h.audioPath);
+        return h;
+      }),
+    );
+
+    p.globalChannels = await Promise.all(
+      (p.globalChannels || []).map(async (ch: any) => {
+        if (ch.audioPath) ch.audioUrl = await sign(ch.audioPath);
+        return ch;
+      }),
+    );
+
+    return c.json({ project: p });
+  } catch (err) {
+    console.error(err);
     return c.json({ error: "Internal server error" }, 500);
   }
 });
@@ -518,7 +549,19 @@ app.post("/share", async (c) => {
 
     const supabase = getSupabaseAdmin();
 
-    // check existing
+    // ✅ enforce ownership
+    const { data: project } = await supabase
+      .from("projects")
+      .select("id")
+      .eq("id", projectId)
+      .eq("user_id", user.id)
+      .single();
+
+    if (!project) {
+      return c.json({ error: "Forbidden" }, 403);
+    }
+
+    // check existing active share
     const { data: existing } = await supabase
       .from("project_shares")
       .select("short_id")
@@ -530,8 +573,8 @@ app.post("/share", async (c) => {
       return c.json({ shortId: existing.short_id });
     }
 
-    // create new
-    const shortId = crypto.randomUUID().slice(0, 10);
+    // create new (longer id)
+    const shortId = crypto.randomUUID().replace(/-/g, "").slice(0, 16);
 
     await supabase.from("project_shares").insert({
       short_id: shortId,
@@ -647,14 +690,12 @@ app.get("/public/projects", async (c) => {
   try {
     const supabase = getSupabaseAdmin();
 
-    // Get active shares
-    const { data: shares, error: sharesError } = await supabase
-      .from("project_shares")
-      .select("project_id, short_id")
-      .eq("is_active", true);
+    const { data: projects, error } = await supabase
+      .from("projects")
+      .select("id, data")
+      .eq("is_public", true);
 
-    if (sharesError) {
-      console.error("Failed to load shares:", sharesError);
+    if (error) {
       return c.json({ projects: [] });
     }
 
@@ -666,41 +707,20 @@ app.get("/public/projects", async (c) => {
       return data?.signedUrl ?? null;
     };
 
-    const projects = [];
+    const result = await Promise.all(
+      (projects || []).map(async (row) => {
+        const p = row.data as any;
 
-    for (const s of shares || []) {
-      try {
-        const { data: projectRow } = await supabase
-          .from("projects")
-          .select("id, data")
-          .eq("id", s.project_id)
-          .single();
-
-        if (!projectRow) continue;
-
-        const p = { ...projectRow.data } as any;
-
-        let imageUrl = null;
-        if (p.imagePath) {
-          imageUrl = await sign(p.imagePath);
-        }
-
-        const hotspotCount = (p.hotspots || []).length || 0;
-
-        projects.push({
-          projectId: projectRow.id,
+        return {
+          projectId: row.id,
           title: p.title || "Untitled",
-          imageUrl,
-          hotspotCount,
-          shareShortId: s.short_id || null,
-        });
-      } catch (e) {
-        console.warn("Skipping share due to error:", s, e);
-        continue;
-      }
-    }
+          imageUrl: await sign(p.imagePath),
+          hotspotCount: (p.hotspots || []).length || 0,
+        };
+      })
+    );
 
-    return c.json({ projects });
+    return c.json({ projects: result });
   } catch (err) {
     console.error(err);
     return c.json({ projects: [] }, 500);

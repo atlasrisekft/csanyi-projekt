@@ -88,6 +88,7 @@ import { toast } from "sonner";
 import { RootGalleryView } from "./RootGalleryView";
 import { AppHeader } from "./AppHeader";
 import type { PublicGalleryProject } from "./PublicGalleryView";
+import { getPublicProjectById } from "../utils/api";
 
 // ---------------------------------------------------------------------------
 // TYPES
@@ -328,7 +329,7 @@ const ColorPicker = ({
           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
         />
         <div
-          className="absolute top-0 bottom-0 w-4 h-4 rounded-full bg-white border-2 border-white shadow-md pointer-events-none"
+          className="absolute top-0 bottom-0 w-4 h-4 rounded-full bg-white border-2 border-white pointer-events-none"
           style={{ left: `calc(${(hue / 360) * 100}% - 8px)` }}
         />
       </div>
@@ -548,98 +549,121 @@ const ShareDialogContent = ({
   const [isLoading, setIsLoading] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  useEffect(() => {
-    setIsLoading(true);
-    import("../utils/api").then(({ createShareLink }) => {
-      createShareLink(session?.access_token, project.id)
-        .then((data: any) => {
-          console.log("share link response:", data);
-          if (!data?.shortId) {
-            throw new Error("No shortId returned");
-          }
-          setLink(`${window.location.origin}/s/${data.shortId}`);
-          setIsLoading(false);
-        })
-        .catch((err) => {
-          console.error("Error creating share link:", err);
-          setIsLoading(false);
-        });
-    });
-  }, [session?.access_token, project.id]);
+  const createLink = async () => {
+    if (!session?.access_token || !project.id) return;
 
-  if (isLoading || !link) {
-    return (
-      <div className="flex items-center justify-center py-8">
-        <Loader2 className="w-6 h-6 animate-spin text-indigo-600" />
-      </div>
-    );
-  }
+    setIsLoading(true);
+    try {
+      const { createShareLink } = await import("../utils/api");
+
+      const data = await createShareLink(
+        session.access_token,
+        project.id
+      );
+
+      if (!data?.shortId) {
+        throw new Error("No shortId returned");
+      }
+
+      setLink(`${window.location.origin}/s/${data.shortId}`);
+    } catch (err) {
+      console.error("Error creating share link:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const copyLink = async () => {
+    if (!link) return;
+
+    try {
+      await navigator.clipboard.writeText(link);
+    } catch {
+      const input = document.getElementById("link") as HTMLInputElement;
+      if (input) {
+        input.select();
+        document.execCommand("copy");
+      }
+    }
+
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   return (
     <div className="space-y-4 mt-4">
+      {/* SHARE LINK SECTION */}
       <div className="flex items-center space-x-2">
         <div className="grid flex-1 gap-2">
           <label htmlFor="link" className="sr-only">
             Hivatkozás
           </label>
+
           <input
             id="link"
-            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
             readOnly
-            value={link}
+            value={link ?? ""}
+            placeholder="Link generálása szükséges"
           />
         </div>
-        <Button
-          size="sm"
-          className="px-3 gap-1"
-          onClick={async () => {
-            try {
-              await navigator.clipboard.writeText(link);
-            } catch (e) {
-              const input = document.getElementById("link") as HTMLInputElement;
-              if (input) {
-                input.select();
-                document.execCommand("copy");
-              }
-            }
-            setCopied(true);
-            setTimeout(() => setCopied(false), 2000);
-          }}
-        >
-          {copied ? (
-            <>
-              <Check className="h-4 w-4" />
-              <span className="text-xs">Másolva</span>
-            </>
-          ) : (
-            <>
-              <Copy className="h-4 w-4" />
-              <span className="sr-only">Másolás</span>
-            </>
-          )}
-        </Button>
-        <Button
-          type="button"
-          size="sm"
-          variant="outline"
-          className="px-3"
-          onClick={() => {
-            window.open(link, "_blank");
-          }}
-        >
-          <ExternalLink className="h-4 w-4" />
-        </Button>
+
+        {!link ? (
+          <Button
+            size="sm"
+            onClick={createLink}
+            disabled={isLoading}
+          >
+            {isLoading ? "..." : "Link létrehozása"}
+          </Button>
+        ) : (
+          <>
+            <Button
+              size="sm"
+              className="px-3 gap-1"
+              onClick={copyLink}
+            >
+              {copied ? (
+                <>
+                  <Check className="h-4 w-4" />
+                  <span className="text-xs">Másolva</span>
+                </>
+              ) : (
+                <>
+                  <Copy className="h-4 w-4" />
+                </>
+              )}
+            </Button>
+
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="px-3"
+              onClick={() => window.open(link, "_blank")}
+            >
+              <ExternalLink className="h-4 w-4" />
+            </Button>
+          </>
+        )}
       </div>
+
+      {/* PUBLIC TOGGLE (independent) */}
       <div className="flex items-center justify-between rounded-lg border border-slate-200 p-3">
         <div className="space-y-0.5">
-          <p className="text-sm font-medium">Megjelenés a nyilvános galériában</p>
+          <p className="text-sm font-medium">
+            Megjelenés a nyilvános galériában
+          </p>
           <p className="text-xs text-slate-500">
-            Ha bekapcsolod, ez a projekt látható lesz a főoldalon mindenki számára.
+            Csak akkor jelenik meg a főoldalon, ha ezt bekapcsolod.
           </p>
         </div>
+
         <Switch
           checked={project.isPublic ?? false}
-          onCheckedChange={(checked) => onTogglePublic(project.id, checked)}
+          onCheckedChange={(checked) =>
+            onTogglePublic(project.id, checked)
+          }
         />
       </div>
     </div>
@@ -727,7 +751,7 @@ const SettingsPanelContent = ({
               </p>
             </div>
           ) : (
-            <div className="bg-white border rounded-lg shadow-sm overflow-hidden">
+            <div className="bg-white border rounded-lg overflow-hidden">
               {/* Header row */}
               <div
                 className="flex items-center gap-3 h-12 px-3 cursor-pointer"
@@ -873,7 +897,7 @@ const SettingsPanelContent = ({
             return (
               <div
                 key={channel.id}
-                className="bg-white border rounded-lg shadow-sm overflow-hidden"
+                className="bg-white border rounded-lg overflow-hidden"
               >
                 {/* Header row */}
                 <div
@@ -1148,7 +1172,7 @@ const SettingsPanelContent = ({
               return (
                 <div
                   key={h.id}
-                  className={`bg-white border rounded-lg shadow-sm overflow-hidden ${!h.audioUrl ? 'border-red-200' : ''}`}
+                  className={`bg-white border rounded-lg overflow-hidden ${!h.audioUrl ? 'border-red-200' : ''}`}
                 >
                   {/* Header row */}
                   <div
@@ -2150,13 +2174,14 @@ export const SoundMapApp = () => {
           projects={rootGalleryProjects}
           isLoading={isLoadingRootGallery}
           session={session}
-          onOpenProject={(shareShortId: string) => {
-            setIsLoadingGalleryProject(true);
-            getSharedProject(shareShortId)
-              .then((p: Project) => setSelectedGalleryProject(p))
-              .catch(() => toast.error("A hangtérkép betöltése sikertelen"))
-              .finally(() => setIsLoadingGalleryProject(false));
-          }}
+          onOpenProject={(projectId: string) => {
+  setIsLoadingGalleryProject(true);
+
+  getPublicProjectById(projectId)
+    .then((p: Project) => setSelectedGalleryProject(p))
+    .catch(() => toast.error("A hangtérkép betöltése sikertelen"))
+    .finally(() => setIsLoadingGalleryProject(false));
+}}
           isLoadingProject={isLoadingGalleryProject}
           onLoginClick={() => setIsRootGalleryView(false)}
           onMyProjectsClick={() => setIsRootGalleryView(false)}
@@ -2365,7 +2390,7 @@ const GalleryView = ({
           id="tour-create-project"
           onClick={onCreate}
           aria-label="Új projekt létrehozása"
-          className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm shrink-0 rounded-full h-10 w-10 p-0 sm:rounded-md sm:w-auto sm:px-4 flex items-center justify-center gap-2"
+          className="bg-indigo-600 hover:bg-indigo-700 text-white shrink-0 rounded-full h-10 w-10 p-0 sm:rounded-md sm:w-auto sm:px-4 flex items-center justify-center gap-2"
         >
           <Plus className="w-4 h-4" aria-hidden="true" />
           <span className="hidden sm:inline">Új projekt</span>
@@ -2389,7 +2414,7 @@ const GalleryView = ({
             projects.map((project) => (
               <Card
                 key={project.id}
-                className="group hover:shadow-lg transition-shadow cursor-pointer overflow-hidden border-slate-200"
+                className="group transition-colors duration-200 cursor-pointer overflow-hidden border border-slate-200 hover:border-indigo-300"
               >
                 <div
                   className="h-48 bg-slate-100 relative flex items-center justify-center overflow-hidden"
@@ -2971,7 +2996,7 @@ const EditorView = ({
             <div
               id="tour-canvas-area"
               ref={imageContainerRef}
-              className={`relative shadow-2xl transition-all duration-500 ${
+              className={`relative transition-all duration-500 ${
                 isCanvasHighlighted
                   ? "ring-4 ring-indigo-500 ring-offset-4 ring-offset-slate-100"
                   : ""
@@ -3086,7 +3111,7 @@ const EditorView = ({
         </div>
 
         {/* Desktop Sidebar - Hidden on Mobile */}
-        <div className="hidden lg:flex w-96 bg-white border-l shadow-xl z-10 flex-col shrink-0">
+        <div className="hidden lg:flex w-96 bg-white border-l z-10 flex-col shrink-0">
           <div className="flex-1 overflow-y-auto">
             <SettingsPanelContent
               project={project}
@@ -3120,7 +3145,7 @@ const EditorView = ({
             <DrawerTrigger asChild>
               <Button
                 variant="outline"
-                className="shadow-xl rounded-full pointer-events-auto bg-white h-12 px-6"
+                className=" rounded-full pointer-events-auto bg-white h-12 px-6"
               >
                 <Settings2 className="w-5 h-5 mr-2" />
                 {selectedHotspotId ? "Zóna szerkesztése" : "Beállítások és rétegek"}
@@ -3410,7 +3435,7 @@ const PlayerView = ({
           <Button
             size="lg"
             onClick={handleStart}
-            className="w-full h-14 text-lg bg-indigo-600 hover:bg-indigo-700 text-white rounded-full shadow-xl transition-all hover:scale-105"
+            className="w-full h-14 text-lg bg-indigo-600 hover:bg-indigo-700 text-white rounded-full transition-all hover:scale-105"
           >
             <Play className="w-6 h-6 mr-2 fill-current" />
             Élmény indítása
@@ -3452,7 +3477,7 @@ const PlayerView = ({
           Helyezd az ujjadat a képre és húzd a felfedezéshez. A hang akkor szólal meg, amikor belépel egy zónába. Néhány másodperc után egy leírás is felolvasásra kerül.
         </span>
         <div
-          className="relative shadow-2xl select-none"
+          className="relative select-none"
           style={{ touchAction: "none" }}
         >
           <img

@@ -11,7 +11,7 @@ interface Props {
   projects: PublicGalleryProject[];
   isLoading: boolean;
   session: any;
-  onOpenProject: (shareShortId: string) => void;
+onOpenProject: (projectId: string) => void;
   isLoadingProject: boolean;
   onLoginClick: () => void;
   onMyProjectsClick: () => void;
@@ -50,7 +50,7 @@ export const RootGalleryView = ({
           aria-label="Információ a Hangtérképről"
           aria-expanded={showInfo}
           aria-controls="project-info-banner"
-          className="text-slate-500 hover:text-indigo-600 shrink-0 rounded-full h-10 w-10 p-0 flex items-center justify-center"
+          className="text-slate-500 hover:text-indigo-600 shrink-0 h-10 w-10 p-0 flex items-center justify-center"
         >
           <Info className="w-5 h-5" aria-hidden="true" />
         </Button>
@@ -58,7 +58,7 @@ export const RootGalleryView = ({
           <Button
             onClick={onMyProjectsClick}
             aria-label="Ugrás a saját projektjeimhez"
-            className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm shrink-0 rounded-full h-10 w-10 p-0 sm:rounded-md sm:w-auto sm:px-4 flex items-center justify-center gap-2"
+            className="bg-indigo-600 hover:bg-indigo-700 text-white shrink-0 rounded-full h-10 w-10 p-0 sm:rounded-md sm:w-auto sm:px-4 flex items-center justify-center gap-2"
           >
             <LayoutGrid className="w-4 h-4" aria-hidden="true" />
             <span className="hidden sm:inline">Saját projektek</span>
@@ -68,7 +68,7 @@ export const RootGalleryView = ({
           <Button
             onClick={onLoginClick}
             aria-label="Bejelentkezés a fiókodba"
-            className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm shrink-0 rounded-full h-10 w-10 p-0 sm:rounded-md sm:w-auto sm:px-4 flex items-center justify-center gap-2"
+            className="bg-indigo-600 hover:bg-indigo-700 text-white shrink-0 rounded-full h-10 w-10 p-0 sm:rounded-md sm:w-auto sm:px-4 flex items-center justify-center gap-2"
           >
             <LogIn className="w-4 h-4" aria-hidden="true" />
             <span className="hidden sm:inline">Bejelentkezés</span>
@@ -150,8 +150,8 @@ export const RootGalleryView = ({
             visibleProjects.map((p) => (
               <Card
                 key={p.projectId}
-                className="group hover:shadow-lg transition-shadow cursor-pointer overflow-hidden border-slate-200"
-                onClick={() => { if (p.shareShortId) onOpenProject(p.shareShortId); }}
+                className="group transition-colors duration-200 cursor-pointer overflow-hidden border border-slate-200 hover:border-indigo-300"
+                onClick={() => onOpenProject(p.projectId)}
               >
                 <div className="h-48 bg-slate-100 relative flex items-center justify-center overflow-hidden">
                   {p.imageUrl ? (
@@ -181,7 +181,7 @@ export const RootGalleryView = ({
             <Button
               onClick={handleLoadMore}
               aria-label={`További ${Math.min(PAGE_SIZE, remaining)} hangtérkép betöltése`}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm h-10 px-4 flex items-center justify-center gap-2"
+              className="bg-indigo-600 hover:bg-indigo-700 text-white h-10 px-4 flex items-center justify-center gap-2"
             >
               <Plus className="w-4 h-4" aria-hidden="true" />
               További {Math.min(PAGE_SIZE, remaining)} hangtérkép betöltése
@@ -195,7 +195,7 @@ export const RootGalleryView = ({
 
       {isLoadingProject && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl p-6 flex items-center gap-3 shadow-2xl">
+          <div className="bg-white rounded-2xl p-6 flex items-center gap-3">
             <Loader2 className="w-5 h-5 animate-spin text-indigo-600" />
             <span className="text-sm font-medium text-slate-700">Hangtérkép betöltése...</span>
           </div>

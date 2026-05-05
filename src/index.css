@@ -3462,3 +3462,75 @@ html {
     transform: translate3d(var(--tw-exit-translate-x, 0), var(--tw-exit-translate-y, 0), 0) scale3d(var(--tw-exit-scale, 1), var(--tw-exit-scale, 1), var(--tw-exit-scale, 1)) rotate(var(--tw-exit-rotate, 0));
   }
 }
+
+/* Custom card hover utilities (added because precompiled Tailwind misses these) */
+.card-zoom-img {
+  transition: transform 600ms cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+}
+.group:hover .card-zoom-img,
+.card-hover:hover .card-zoom-img {
+  transform: scale(1.06);
+}
+
+.card-overlay-fade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0) 50%, rgba(15, 23, 42, 0.55) 100%);
+  opacity: 0;
+  transition: opacity 300ms ease;
+  pointer-events: none;
+}
+.group:hover .card-overlay-fade,
+.card-hover:hover .card-overlay-fade {
+  opacity: 1;
+}
+
+.card-cta-pill {
+  position: absolute;
+  bottom: 0.75rem;
+  left: 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.75rem;
+  border-radius: 9999px;
+  background-color: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: #1e293b;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  opacity: 0;
+  transform: translateY(0.25rem);
+  transition: opacity 300ms ease, transform 300ms ease;
+  pointer-events: none;
+}
+.group:hover .card-cta-pill,
+.card-hover:hover .card-cta-pill {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.card-title-soft {
+  color: #0f172a;
+  transition: color 200ms ease;
+}
+.group:hover .card-title-soft,
+.card-hover:hover .card-title-soft {
+  color: #4f46e5;
+}
+
+.card-meta-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  background-color: #eef2ff;
+  color: #4338ca;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}

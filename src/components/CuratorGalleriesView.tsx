@@ -120,7 +120,7 @@ export const CuratorGalleriesView = ({
           </div>
           <Button
             onClick={onCreate}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shrink-0 rounded-full h-12 w-12 p-0 sm:rounded-md sm:h-10 sm:w-auto sm:px-4 flex items-center justify-center"
+            className="bg-indigo-600 hover:bg-indigo-700 text-white shrink-0 rounded-full h-12 w-12 p-0 sm:rounded-md sm:h-10 sm:w-auto sm:px-4 flex items-center justify-center"
           >
             <Plus className="w-6 h-6 sm:w-5 sm:h-5 sm:mr-2" />
             <span className="hidden sm:inline">Új galéria</span>
@@ -150,7 +150,7 @@ export const CuratorGalleriesView = ({
             {galleries.map((gallery) => (
               <Card
                 key={gallery.id}
-                className="group hover:shadow-lg transition-shadow border-slate-200 overflow-hidden"
+                className="group transition-colors duration-200 border border-slate-200 overflow-hidden hover:border-indigo-300"
               >
                 <div
                   className="h-36 bg-gradient-to-br from-indigo-50 via-slate-50 to-purple-50 flex items-center justify-center cursor-pointer"
