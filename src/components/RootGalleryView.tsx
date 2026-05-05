@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Loader2, Image as ImageIcon, LogIn, LayoutGrid, Sparkles, Info, X, Plus } from 'lucide-react';
+import { Loader2, Image as ImageIcon, LogIn, LayoutGrid, Plus } from 'lucide-react';
 
 const PAGE_SIZE = 9;
 import { Button } from './ui/button';
 import { Card, CardContent } from './ui/card';
 import { AppHeader } from './AppHeader';
 import type { PublicGalleryProject } from './PublicGalleryView';
+import csanyiHatter from '../assets/csanyi_hatter.png';
+import csanyiIkon from '../assets/csanyi_ikon.png';
 
 interface Props {
   projects: PublicGalleryProject[];
@@ -26,7 +28,6 @@ export const RootGalleryView = ({
   onLoginClick,
   onMyProjectsClick,
 }: Props) => {
-  const [showInfo, setShowInfo] = useState(false);
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
   // Reset visible count whenever the projects list changes (e.g. after a fresh load).
@@ -44,16 +45,6 @@ export const RootGalleryView = ({
   return (
     <div className="min-h-screen bg-slate-50">
       <AppHeader description="Böngészd a közösség által megosztott interaktív hangtérképeket">
-        <Button
-          variant="ghost"
-          onClick={() => setShowInfo(!showInfo)}
-          aria-label="Információ a Hangtérképről"
-          aria-expanded={showInfo}
-          aria-controls="project-info-banner"
-          className="text-slate-500 hover:text-indigo-600 shrink-0 h-10 w-10 p-0 flex items-center justify-center"
-        >
-          <Info className="w-5 h-5" aria-hidden="true" />
-        </Button>
         {session ? (
           <Button
             onClick={onMyProjectsClick}
@@ -77,58 +68,38 @@ export const RootGalleryView = ({
         )}
       </AppHeader>
 
+      <section
+        aria-label="Üdvözlő rész"
+        className="relative w-full overflow-hidden border-b border-indigo-900/20"
+        style={{
+          backgroundImage: `url(${csanyiHatter})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundColor: '#5b4ce0',
+        }}
+      >
+        <div className="max-w-6xl mx-auto px-6 sm:px-8 py-10 sm:py-16 grid grid-cols-1 sm:grid-cols-2
+ items-center gap-6 sm:gap-8">
+          <div className="text-white max-w-xl">
+            <h1 className="text-2xl sm:text-4xl lg:text-5xl font-bold leading-tight">
+              Üdv a hangtérképen!
+            </h1>
+            <p className="mt-3 sm:mt-4 text-sm sm:text-lg leading-relaxed text-white/90">
+              A Hangtérkép egy immerzív élmény, amely hangokon keresztül teszi értelmezhetővé és átélhetővé a képeket látás nélkül. A képeken kijelölt zónákhoz kapcsolódó hangok, narrációk és háttércsatornák segítenek feltérképezni a tartalmat — mintha egy láthatatlan térképen tájékozódnál.
+            </p>
+          </div>
+          <img
+  src={csanyiIkon}
+  alt=""
+  aria-hidden="true"
+  className="w-full max-w-[220px] sm:max-w-[260px] lg:max-w-[300px] h-auto mx-auto sm:mx-0 pointer-events-none select-none"
+  draggable={false}
+/>
+        </div>
+      </section>
+
       <main id="main-content" role="main" className="max-w-6xl mx-auto p-8">
         <div className="mb-8">
-          {showInfo && (
-            <div
-              id="project-info-banner"
-              role="region"
-              aria-label="A Hangtérkép projektről"
-              className="flex items-start gap-3 mb-4"
-              style={{
-                padding: '0.75rem 1rem',
-                borderRadius: '0.75rem',
-                border: '1px solid rgba(99,102,241,0.2)',
-                backgroundImage:
-                  'linear-gradient(135deg, rgba(238,242,255,0.9) 0%, rgba(250,245,255,0.9) 100%)',
-              }}
-            >
-              <span
-                aria-hidden="true"
-                className="flex items-center justify-center shrink-0"
-                style={{
-                  width: '1.75rem',
-                  height: '1.75rem',
-                  borderRadius: '0.5rem',
-                  backgroundImage:
-                    'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
-                }}
-              >
-                <Sparkles className="w-3.5 h-3.5 text-white" />
-              </span>
-              <p className="text-sm text-slate-700 leading-snug flex-1 pt-0.5">
-                <span className="font-semibold text-slate-900">Mi ez?</span>{' '}
-                A Hangtérkép egy immerzív élmény, amely hangokon keresztül teszi értelmezhetővé és átélhetővé a képeket látás nélkül. A képeken kijelölt zónákhoz kapcsolódó hangok, narrációk és háttércsatornák segítenek feltérképezni a tartalmat — mintha egy láthatatlan térképen tájékozódnál.
-              </p>
-              <button
-                type="button"
-                onClick={() => setShowInfo(false)}
-                aria-label="Információ bezárása"
-                className="shrink-0 text-slate-400 hover:text-slate-700 flex items-center justify-center"
-                style={{
-                  width: '1.5rem',
-                  height: '1.5rem',
-                  borderRadius: '9999px',
-                  background: 'transparent',
-                  border: 'none',
-                  cursor: 'pointer',
-                }}
-              >
-                <X className="w-4 h-4" aria-hidden="true" />
-              </button>
-            </div>
-          )}
-
           <h1 className="text-3xl font-bold text-slate-900">Közösségi galéria</h1>
           <p className="text-slate-500 mt-1">
             Fedezd fel az interaktív hangtérképeket, amiket mások készítettek.
