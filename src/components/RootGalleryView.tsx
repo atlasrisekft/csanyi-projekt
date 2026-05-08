@@ -5,6 +5,9 @@ const PAGE_SIZE = 9;
 import { Button } from './ui/button';
 import { Card, CardContent } from './ui/card';
 import { AppHeader } from './AppHeader';
+import { Footer } from './Footer';
+import { TermsPage } from './TermsPage';
+import { PrivacyPage } from './PrivacyPage';
 import type { PublicGalleryProject } from './PublicGalleryView';
 import csanyiHatter from '../assets/csanyi_hatter.png';
 import csanyiIkon from '../assets/csanyi_ikon.png';
@@ -29,6 +32,7 @@ export const RootGalleryView = ({
   onMyProjectsClick,
 }: Props) => {
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const [legalPage, setLegalPage] = useState<'terms' | 'privacy' | null>(null);
 
   // Reset visible count whenever the projects list changes (e.g. after a fresh load).
   useEffect(() => {
@@ -42,8 +46,11 @@ export const RootGalleryView = ({
     setVisibleCount(Math.min(visibleCount + PAGE_SIZE, projects.length));
   };
 
+  if (legalPage === 'terms') return <TermsPage onBack={() => setLegalPage(null)} />;
+  if (legalPage === 'privacy') return <PrivacyPage onBack={() => setLegalPage(null)} />;
+
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 flex flex-col">
       <AppHeader description="Böngészd a közösség által megosztott interaktív hangtérképeket">
         {session ? (
           <Button
@@ -163,6 +170,11 @@ export const RootGalleryView = ({
           </div>
         )}
       </main>
+
+      <Footer
+        onTermsClick={() => setLegalPage('terms')}
+        onPrivacyClick={() => setLegalPage('privacy')}
+      />
 
       {isLoadingProject && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 backdrop-blur-sm">
