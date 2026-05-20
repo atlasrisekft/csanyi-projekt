@@ -542,12 +542,12 @@ export const SoundUploadModal = ({ open, onOpenChange, onLocalUpload, onLibraryS
                                 <input
                                     ref={fileInputRef}
                                     type="file"
-                                    accept=".mp3,.m4a,.ogg,audio/mpeg,audio/mp4,audio/ogg"
+                                    accept=".mp3,.m4a,.ogg,.wav,audio/mpeg,audio/mp4,audio/ogg,audio/wav"
                                     className="hidden"
                                     onChange={handleLocalFileSelect}
                                 />
                                 <p className="text-xs text-slate-400">
-                                    Támogatott formátumok: MP3, M4A (AAC) és OGG. Maximum 5 perc, 10 MB.
+                                    Támogatott formátumok: MP3, M4A (AAC), OGG és WAV. Maximum 5 perc, 10 MB.
                                 </p>
                             </div>
                         </div>

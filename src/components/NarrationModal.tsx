@@ -212,7 +212,8 @@ export const NarrationModal = ({ open, onClose, onSave, sessionUserId, projectId
     
     const handleSave = async () => {
         if (activeTab === 'upload' && uploadedFile) {
-            const path = `${sessionUserId}/${projectId}/intro_${Date.now()}.mp3`;
+            const uploadExt = uploadedFile.name.includes('.') ? uploadedFile.name.split('.').pop()!.toLowerCase() : 'mp3';
+            const path = `${sessionUserId}/${projectId}/intro_${Date.now()}.${uploadExt}`;
             onSave(uploadedFile, path);
             onClose();
         } else if (activeTab === 'record' && recordedBlob) {
@@ -303,12 +304,12 @@ export const NarrationModal = ({ open, onClose, onSave, sessionUserId, projectId
                                         <input
                                             ref={fileInputRef}
                                             type="file"
-                                            accept=".mp3,.m4a,.ogg"
+                                            accept=".mp3,.m4a,.ogg,.wav"
                                             className="hidden"
                                             onChange={handleFileUpload}
                                         />
                                         <p className="text-xs text-slate-400">
-                                            Támogatott formátumok: MP3, M4A (AAC) és OGG. Maximum 5 perc, 10 MB.
+                                            Támogatott formátumok: MP3, M4A (AAC),WAV és OGG. Maximum 5 perc, 10 MB.
                                         </p>
                                     </>
                                 ) : (
@@ -337,7 +338,7 @@ export const NarrationModal = ({ open, onClose, onSave, sessionUserId, projectId
                                         <input
                                             ref={fileInputRef}
                                             type="file"
-                                            accept=".mp3,.m4a,.ogg"
+                                            accept=".mp3,.m4a,.ogg,.wav"
                                             className="hidden"
                                             onChange={handleFileUpload}
                                         />

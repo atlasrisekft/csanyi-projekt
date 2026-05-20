@@ -33,10 +33,10 @@ export const ProfileView = ({ onBack, onSignOut, onShowOnboarding }: { onBack: (
                 description="Profil és fiókbeállítások"
             >
                 <Button
-                    variant="ghost"
+                    variant="outline"
                     onClick={onBack}
                     aria-label="Vissza a galériához"
-                    className="text-slate-500 hover:text-indigo-600 h-10 w-10 p-0 sm:w-auto sm:px-3 flex items-center justify-center gap-2"
+                    className="text-slate-500 hover:text-indigo-600 h-9 w-10 p-0 sm:w-auto sm:px-3 flex items-center justify-center gap-2"
                 >
                     <ArrowLeft className="w-4 h-4 shrink-0" aria-hidden="true" />
                     <span className="hidden sm:inline text-sm font-medium">Vissza a galériához</span>

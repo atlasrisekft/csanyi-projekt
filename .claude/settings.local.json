@@ -5,7 +5,9 @@
       "Bash(node_modules/.bin/tsc --noEmit)",
       "Bash(npm run *)",
       "Bash(git restore *)",
-      "Bash(npx tsc *)"
+      "Bash(npx tsc *)",
+      "Bash(npm install *)",
+      "Bash(node -e \"const pc = require\\('/Users/nina/Documents/coding/csanyi-projekt/node_modules/polygon-clipping'\\); console.log\\(typeof pc.difference\\);\")"
     ]
   }
 }

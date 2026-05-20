@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
+import polygonClipping from "polygon-clipping";
 import {
   Upload,
   Play,
@@ -124,16 +125,26 @@ export type AudioSettings = {
   fadeOut: number;
 };
 
-export type Hotspot = {
+export type HotspotSound = {
   id: string;
-  points: Point[];
   audioFile: File | null;
   audioUrl: string | null;
   audioPath?: string | null;
   name: string;
+};
+
+export type Hotspot = {
+  id: string;
+  points: Point[];
+  sounds: HotspotSound[];
+  name: string;
   color: string;
   settings: AudioSettings;
   accessibilityDescription?: string;
+  // Legacy fields kept for migration from old saved projects
+  audioFile?: File | null;
+  audioUrl?: string | null;
+  audioPath?: string | null;
 };
 
 export type GlobalChannel = {
@@ -604,7 +615,7 @@ const ShareDialogContent = ({
             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
             readOnly
             value={link ?? ""}
-            placeholder="Link generálása szükséges"
+            placeholder="Kattints a Megosztás gombra a link létrehozásához"
           />
         </div>
 
@@ -614,7 +625,7 @@ const ShareDialogContent = ({
             onClick={createLink}
             disabled={isLoading}
           >
-            {isLoading ? "..." : "Link létrehozása"}
+            {isLoading ? "..." : "Megosztás"}
           </Button>
         ) : (
           <>
@@ -691,6 +702,9 @@ const SettingsPanelContent = ({
   toggleIntroAudioCollapse,
   previewingZoneId,
   toggleZonePreview,
+  setPreviewingZoneId,
+  stopZonePreviewSounds,
+  zonePreviewTimerRef,
   setIsCanvasHighlighted,
 }: {
   project: Project;
@@ -713,6 +727,9 @@ const SettingsPanelContent = ({
   toggleIntroAudioCollapse: () => void;
   previewingZoneId: string | null;
   toggleZonePreview: (hotspot: Hotspot) => void;
+  setPreviewingZoneId: (id: string | null) => void;
+  stopZonePreviewSounds: (hotspotId: string, sounds: HotspotSound[]) => void;
+  zonePreviewTimerRef: React.MutableRefObject<NodeJS.Timeout | null>;
   setIsCanvasHighlighted?: (highlighted: boolean) => void;
 }) => {
   const [advancedOpenIds, setAdvancedOpenIds] = React.useState<Set<string>>(
@@ -1172,7 +1189,7 @@ const SettingsPanelContent = ({
               return (
                 <div
                   key={h.id}
-                  className={`bg-white border rounded-lg overflow-hidden ${!h.audioUrl ? 'border-red-200' : ''}`}
+                  className={`bg-white border rounded-lg overflow-hidden ${!(h.sounds || []).some((s) => s.audioUrl) ? 'border-red-200' : ''}`}
                 >
                   {/* Header row */}
                   <div
@@ -1216,36 +1233,73 @@ const SettingsPanelContent = ({
                   {/* Expanded settings */}
                   {isOpen && (
                     <div className="border-t border-slate-100 px-3 pb-4 pt-4 space-y-5">
-                      <div className="flex gap-2">
+                      {/* Sound list */}
+                      <div className="space-y-2">
+                        {(h.sounds || []).length === 0 && (
+                          <p className="text-xs text-slate-400 text-center py-2">Még nincs hang hozzáadva</p>
+                        )}
+                        {(h.sounds || []).map((s) => (
+                          <div key={s.id} className="flex items-center gap-2 bg-slate-50 rounded-lg px-2 py-1.5">
+                            <button
+                              className="w-7 h-7 flex items-center justify-center rounded-md text-blue-500 hover:bg-blue-50 transition-colors shrink-0"
+                              onClick={() => {
+                                if (previewingZoneId === h.id) {
+                                  stopZonePreviewSounds(h.id, h.sounds || []);
+                                  setPreviewingZoneId(null);
+                                } else {
+                                  if (previewingZoneId) {
+                                    const prev = project.hotspots.find((z) => z.id === previewingZoneId);
+                                    if (prev) stopZonePreviewSounds(previewingZoneId, prev.sounds || []);
+                                  }
+                                  if (s.audioUrl) engine.play(`preview-zone-${h.id}:${s.id}`, s.audioUrl, h.settings);
+                                  setPreviewingZoneId(h.id);
+                                  if (zonePreviewTimerRef.current) clearTimeout(zonePreviewTimerRef.current);
+                                  zonePreviewTimerRef.current = setTimeout(() => {
+                                    engine.stop(`preview-zone-${h.id}:${s.id}`);
+                                    setPreviewingZoneId(null);
+                                  }, 5000);
+                                }
+                              }}
+                              disabled={!s.audioUrl}
+                            >
+                              <Play className="w-3.5 h-3.5" />
+                            </button>
+                            <span className="flex-1 text-sm text-slate-700 truncate min-w-0">{s.name}</span>
+                            <button
+                              className="w-7 h-7 flex items-center justify-center rounded-md text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors shrink-0"
+                              onClick={() =>
+                                onUpdate((p) => ({
+                                  ...p,
+                                  hotspots: p.hotspots.map((z) =>
+                                    z.id === h.id
+                                      ? { ...z, sounds: (z.sounds || []).filter((x) => x.id !== s.id) }
+                                      : z,
+                                  ),
+                                }))
+                              }
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        ))}
                         <button
-                          id={h.audioUrl ? undefined : "tour-zone-upload-audio"}
-                          className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg border text-sm font-medium transition-colors"
-                          style={{
-                            borderColor: h.audioUrl ? "#bedbff" : "#e2e8f0",
-                            color: h.audioUrl ? "#2b7fff" : "#94a3b8",
-                          }}
-                          onClick={() => h.audioUrl && toggleZonePreview(h)}
-                          disabled={!h.audioUrl}
-                        >
-                          {previewingZoneId === h.id ? (
-                            <Pause className="w-4 h-4" />
-                          ) : (
-                            <Play className="w-4 h-4" />
-                          )}
-                          Meghallgatás
-                        </button>
-                        <button
-                          id={!h.audioUrl ? "tour-zone-upload-audio" : undefined}
-                          className={`flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-medium transition-colors ${
-                            h.audioUrl
-                              ? 'border border-black/10 text-slate-600 hover:bg-slate-50'
-                              : 'bg-indigo-600 text-white hover:bg-indigo-700'
-                          }`}
+                          id={(h.sounds || []).length === 0 ? "tour-zone-upload-audio" : undefined}
+                          className="w-full flex items-center justify-center gap-2 h-9 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium transition-colors"
                           onClick={() => openUploadModal("hotspot", h.id)}
                         >
-                          {h.audioUrl ? <RefreshCw className="w-4 h-4" /> : <Upload className="w-4 h-4" />}
-                          {h.audioUrl ? "Csere" : "Feltöltés"}
+                          <Plus className="w-4 h-4" />
+                          Hang hozzáadása
                         </button>
+                        {(h.sounds || []).length > 0 && (
+                          <button
+                            className="w-full flex items-center justify-center gap-2 h-9 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 text-sm font-medium transition-colors"
+                            onClick={() => toggleZonePreview(h)}
+                            disabled={!(h.sounds || []).some((s) => s.audioUrl)}
+                          >
+                            {previewingZoneId === h.id ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                            {previewingZoneId === h.id ? "Leállítás" : "Összes meghallgatása"}
+                          </button>
+                        )}
                       </div>
 
                       <ColorPicker
@@ -1474,21 +1528,35 @@ const refreshProjectUrls = async (
   }
 
   p.hotspots = await Promise.all(
-    p.hotspots.map(async (h) => {
-      if (h.audioPath) {
-        try {
-          const sanitizedPath = sanitizeStoragePath(h.audioPath);
-          const { url } = await getSignedUrl(token, sanitizedPath);
-          return { ...h, audioUrl: url, audioPath: sanitizedPath };
-        } catch (e) {
-          console.warn(
-            `Hotspot audio not found in storage, clearing reference: ${h.audioPath}`,
-          );
-          // Return hotspot without audio references
-          return { ...h, audioPath: undefined, audioUrl: undefined };
-        }
+    p.hotspots.map(async (h: any) => {
+      // Migrate legacy single-audio hotspots to sounds[]
+      let sounds: HotspotSound[] = h.sounds || [];
+      if (sounds.length === 0 && h.audioPath) {
+        sounds = [{
+          id: crypto.randomUUID(),
+          audioFile: null,
+          audioUrl: null,
+          audioPath: h.audioPath,
+          name: h.name || 'Hang',
+        }];
       }
-      return h;
+
+      // Hydrate signed URLs for each sound
+      sounds = await Promise.all(
+        sounds.map(async (s) => {
+          if (!s.audioPath) return s;
+          try {
+            const sanitizedPath = sanitizeStoragePath(s.audioPath);
+            const { url } = await getSignedUrl(token, sanitizedPath);
+            return { ...s, audioUrl: url, audioPath: sanitizedPath };
+          } catch (e) {
+            console.warn(`Hotspot sound not found in storage, clearing: ${s.audioPath}`);
+            return { ...s, audioPath: undefined, audioUrl: null };
+          }
+        }),
+      );
+
+      return { ...h, sounds, audioPath: undefined, audioUrl: undefined, audioFile: undefined };
     }),
   );
 
@@ -1732,7 +1800,10 @@ export const SoundMapApp = () => {
               (originalProj.introAudioPath && !hydratedProj.introAudioPath) ||
               originalProj.hotspots.some(
                 (h: any, i: number) =>
-                  h.audioPath && !hydratedProj.hotspots[i]?.audioPath,
+                  (h.sounds || []).some(
+                    (s: any, si: number) =>
+                      s.audioPath && !(hydratedProj.hotspots[i]?.sounds || [])[si]?.audioPath,
+                  ),
               ) ||
               (originalProj.globalChannels || []).some(
                 (c: any, i: number) =>
@@ -1827,19 +1898,22 @@ export const SoundMapApp = () => {
     const currentProject = projects.find((p) => p.id === currentProjectId);
     if (!currentProject) return;
 
+    const fileExt = file.name.includes('.') ? file.name.split('.').pop()!.toLowerCase() : 'mp3';
     if (uploadTarget.type === "hotspot") {
-      const path = `${session.user.id}/${currentProject.id}/hs_${uploadTarget.id}_${Date.now()}.mp3`;
+      const newSoundId = crypto.randomUUID();
+      const path = `${session.user.id}/${currentProject.id}/hs_${uploadTarget.id}_${newSoundId}_${Date.now()}.${fileExt}`;
+      const newSound: HotspotSound = {
+        id: newSoundId,
+        audioFile: file,
+        audioUrl: URL.createObjectURL(file),
+        audioPath: path,
+        name: file.name.replace(/\.[^.]+$/, ''),
+      };
       handleUpdateProject((p) => ({
         ...p,
         hotspots: p.hotspots.map((h) =>
           h.id === uploadTarget.id
-            ? {
-                ...h,
-                audioFile: file,
-                audioUrl: URL.createObjectURL(file),
-                audioPath: path,
-                name: file.name.split(".")[0],
-              }
+            ? { ...h, sounds: [...(h.sounds || []), newSound] }
             : h,
         ),
       }));
@@ -1866,7 +1940,7 @@ export const SoundMapApp = () => {
             fadeOut: 2.0,
           },
         };
-        const path = `${session.user.id}/${currentProject.id}/gc_${newChannel.id}_${Date.now()}.mp3`;
+        const path = `${session.user.id}/${currentProject.id}/gc_${newChannel.id}_${Date.now()}.${fileExt}`;
 
         handleUpdateProject((p) => ({
           ...p,
@@ -1886,7 +1960,7 @@ export const SoundMapApp = () => {
           console.error(e);
         }
       } else {
-        const path = `${session.user.id}/${currentProject.id}/gc_${uploadTarget.id}_${Date.now()}.mp3`;
+        const path = `${session.user.id}/${currentProject.id}/gc_${uploadTarget.id}_${Date.now()}.${fileExt}`;
         handleUpdateProject((p) => ({
           ...p,
           globalChannels: p.globalChannels.map((c) =>
@@ -1926,20 +2000,22 @@ export const SoundMapApp = () => {
       });
 
       if (uploadTarget.type === "hotspot") {
-        const path = `${session.user.id}/${currentProject.id}/hs_${uploadTarget.id}_${Date.now()}.mp3`;
+        const newSoundId = crypto.randomUUID();
+        const path = `${session.user.id}/${currentProject.id}/hs_${uploadTarget.id}_${newSoundId}_${Date.now()}.mp3`;
         const audioUrl =
           sound.previews["preview-hq-mp3"] || sound.previews["preview-lq-mp3"];
+        const newSound: HotspotSound = {
+          id: newSoundId,
+          audioFile: file,
+          audioUrl: audioUrl,
+          audioPath: path,
+          name: sound.name,
+        };
         handleUpdateProject((p) => ({
           ...p,
           hotspots: p.hotspots.map((h) =>
             h.id === uploadTarget.id
-              ? {
-                  ...h,
-                  audioFile: file,
-                  audioUrl: audioUrl,
-                  audioPath: path,
-                  name: sound.name,
-                }
+              ? { ...h, sounds: [...(h.sounds || []), newSound] }
               : h,
           ),
         }));
@@ -2053,8 +2129,8 @@ export const SoundMapApp = () => {
             // Step 4: Zone Upload Audio - advance when audio is added to zone
             if (tourStepIndex === 4) {
               const hasAudioAdded =
-                nextP.hotspots.some((h) => h.audioUrl) &&
-                !p.hotspots.some((h) => h.audioUrl);
+                nextP.hotspots.some((h) => (h.sounds || []).some((s) => s.audioUrl)) &&
+                !p.hotspots.some((h) => (h.sounds || []).some((s) => s.audioUrl));
               if (hasAudioAdded) {
                 setTourStepIndex(5); // Move to zone done step
               }
@@ -2243,7 +2319,7 @@ export const SoundMapApp = () => {
           onPreview={() => {
             // Check for zones without audio
             const zonesWithoutAudio = currentProject.hotspots
-              .filter((h) => !h.audioUrl)
+              .filter((h) => !(h.sounds || []).some((s) => s.audioUrl))
               .map((h, index) => h.name || `Zóna ${index + 1}`);
 
             if (zonesWithoutAudio.length > 0) {
@@ -2365,19 +2441,19 @@ const GalleryView = ({
         description="Saját projektjeid kezelése — készíts és szerkessz hangtérképeket"
       >
         <Button
-          variant="ghost"
+          variant="outline"
           onClick={onGoToPublicGallery}
           aria-label="Vissza a nyilvános galériához"
-          className="text-slate-500 hover:text-indigo-600 h-10 w-10 p-0 sm:w-auto sm:px-3 flex items-center justify-center gap-2"
+          className="text-slate-500 hover:text-indigo-600 h-9 w-10 p-0 sm:w-auto sm:px-3 flex items-center justify-center gap-2"
         >
           <ArrowLeft className="w-4 h-4 shrink-0" aria-hidden="true" />
           <span className="hidden sm:inline text-sm font-medium">Nyilvános galéria</span>
         </Button>
         <Button
-          variant="ghost"
+          variant="outline"
           onClick={onProfile}
           aria-label="Profil megnyitása"
-          className="text-slate-500 hover:text-indigo-600 h-10 w-10 p-0 sm:w-auto sm:px-3 flex items-center justify-center gap-2"
+          className="text-slate-500 hover:text-indigo-600 h-9 w-10 p-0 sm:w-auto sm:px-3 flex items-center justify-center gap-2"
         >
           <UserIcon className="w-5 h-5 shrink-0" aria-hidden="true" />
           <span className="hidden sm:inline text-sm font-medium">
@@ -2390,7 +2466,7 @@ const GalleryView = ({
           id="tour-create-project"
           onClick={onCreate}
           aria-label="Új projekt létrehozása"
-          className="bg-indigo-600 hover:bg-indigo-700 text-white shrink-0 rounded-full h-10 w-10 p-0 sm:rounded-md sm:w-auto sm:px-4 flex items-center justify-center gap-2"
+            className="bg-indigo-600 hover:bg-indigo-700 text-white shrink-0 h-9 w-9 sm:w-auto sm:px-4 p-0 flex items-center justify-center"
         >
           <Plus className="w-4 h-4" aria-hidden="true" />
           <span className="hidden sm:inline">Új projekt</span>
@@ -2435,7 +2511,7 @@ const GalleryView = ({
                   <div className="flex items-center justify-between">
                     <div
                       onClick={() => onSelect(project.id)}
-                      className="flex-1"
+                      className="flex-1 min-w-0"
                     >
                       <h3 className="font-semibold text-slate-800 truncate">
                         {project.title}
@@ -2447,7 +2523,7 @@ const GalleryView = ({
                     </div>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
                           <MoreVertical className="w-4 h-4" />
                         </Button>
                       </DropdownMenuTrigger>
@@ -2572,6 +2648,40 @@ const polygonsOverlap = (poly1: Point[], poly2: Point[]): boolean => {
   return false;
 };
 
+// Subtract all existing zone polygons from the drawn polygon.
+// Returns the clipped Point[] (largest piece), or null if the drawn area is fully covered.
+const subtractZones = (drawn: Point[], existing: Point[][]): Point[] | null => {
+  const toRing = (pts: Point[]): [number, number][] => pts.map((p) => [p.x, p.y]);
+  const signedArea = (ring: [number, number][]): number => {
+    let a = 0;
+    for (let i = 0, j = ring.length - 1; i < ring.length; j = i++)
+      a += ring[j][0] * ring[i][1] - ring[i][0] * ring[j][1];
+    return a / 2;
+  };
+
+  const result = polygonClipping.difference(
+    [toRing(drawn)],
+    ...existing.map((pts) => [toRing(pts)] as polygonClipping.Polygon),
+  );
+
+  if (!result || result.length === 0) return null;
+
+  // Pick the outer ring of the largest polygon
+  let best: [number, number][] = [];
+  let bestArea = 0;
+  for (const poly of result) {
+    const area = Math.abs(signedArea(poly[0]));
+    if (area > bestArea) { bestArea = area; best = poly[0]; }
+  }
+  if (best.length < 3) return null;
+
+  // polygon-clipping closes rings (last === first); drop closing point
+  const closed =
+    best[best.length - 1][0] === best[0][0] &&
+    best[best.length - 1][1] === best[0][1];
+  return (closed ? best.slice(0, -1) : best).map(([x, y]) => ({ x, y }));
+};
+
 const EditorView = ({
   project,
   onUpdate,
@@ -2607,9 +2717,6 @@ const EditorView = ({
 
   // Drawer state for mobile
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-
-  // Overlap warning state
-  const [showOverlapWarning, setShowOverlapWarning] = useState(false);
 
   // Canvas highlight state for "Add Zones" prompt
   const [isCanvasHighlighted, setIsCanvasHighlighted] = useState(false);
@@ -2771,33 +2878,35 @@ const EditorView = ({
     }
   };
 
-  const toggleZonePreview = (hotspot: Hotspot) => {
-    if (!hotspot.audioUrl) return;
+  const stopZonePreviewSounds = (hotspotId: string, sounds: HotspotSound[]) => {
+    sounds.forEach((s) => engine.stop(`preview-zone-${hotspotId}:${s.id}`));
+  };
 
-    const previewId = `preview-zone-${hotspot.id}`;
+  const toggleZonePreview = (hotspot: Hotspot) => {
+    const sounds = hotspot.sounds || [];
+    if (!sounds.some((s) => s.audioUrl)) return;
 
     if (previewingZoneId === hotspot.id) {
-      engine.stop(previewId);
+      stopZonePreviewSounds(hotspot.id, sounds);
       setPreviewingZoneId(null);
       if (zonePreviewTimerRef.current) {
         clearTimeout(zonePreviewTimerRef.current);
         zonePreviewTimerRef.current = null;
       }
     } else {
-      // Stop any currently playing preview
       if (previewingZoneId) {
-        engine.stop(`preview-zone-${previewingZoneId}`);
+        const prev = project.hotspots.find((h) => h.id === previewingZoneId);
+        if (prev) stopZonePreviewSounds(previewingZoneId, prev.sounds || []);
       }
-      if (zonePreviewTimerRef.current) {
-        clearTimeout(zonePreviewTimerRef.current);
-      }
+      if (zonePreviewTimerRef.current) clearTimeout(zonePreviewTimerRef.current);
 
-      engine.play(previewId, hotspot.audioUrl, hotspot.settings);
+      sounds.forEach((s) => {
+        if (s.audioUrl) engine.play(`preview-zone-${hotspot.id}:${s.id}`, s.audioUrl, hotspot.settings);
+      });
       setPreviewingZoneId(hotspot.id);
 
-      // Auto-stop after 5 seconds
       zonePreviewTimerRef.current = setTimeout(() => {
-        engine.stop(previewId);
+        stopZonePreviewSounds(hotspot.id, sounds);
         setPreviewingZoneId(null);
         zonePreviewTimerRef.current = null;
       }, 5000);
@@ -2864,27 +2973,30 @@ const EditorView = ({
     setCurrentPoints((prev) => [...prev, getRelativeCoordinates(e)]);
   };
 
+  const handleStopDrawingRef = useRef<() => void>(() => {});
+
   const handleStopDrawing = () => {
     if (!isDrawing) return;
     if (currentPoints.length > 5) {
-      // Check if new selection overlaps with any existing hotspots
-      const hasOverlap = project.hotspots.some((hotspot) =>
-        polygonsOverlap(currentPoints, hotspot.points),
+      const overlapping = project.hotspots.filter((h) =>
+        polygonsOverlap(currentPoints, h.points),
       );
 
-      if (hasOverlap) {
-        // Show popup alert and don't create the hotspot
-        setShowOverlapWarning(true);
-        setIsDrawing(false);
-        setCurrentPoints([]);
-        return;
+      let finalPoints = currentPoints;
+      if (overlapping.length > 0) {
+        const clipped = subtractZones(currentPoints, overlapping.map((h) => h.points));
+        if (!clipped) {
+          setIsDrawing(false);
+          setCurrentPoints([]);
+          return;
+        }
+        finalPoints = clipped;
       }
 
       const newHotspot: Hotspot = {
         id: crypto.randomUUID(),
-        points: currentPoints,
-        audioFile: null,
-        audioUrl: null,
+        points: finalPoints,
+        sounds: [],
         name: `Zóna ${project.hotspots.length + 1}`,
         color: COLORS[Math.floor(Math.random() * COLORS.length)],
         settings: { volume: 1, pan: 0, loop: false, fadeIn: 0.5, fadeOut: 0.5 },
@@ -2898,6 +3010,15 @@ const EditorView = ({
     setIsDrawing(false);
     setCurrentPoints([]);
   };
+
+  handleStopDrawingRef.current = handleStopDrawing;
+
+  useEffect(() => {
+    if (!isDrawing) return;
+    const onGlobalMouseUp = () => handleStopDrawingRef.current();
+    window.addEventListener('mouseup', onGlobalMouseUp);
+    return () => window.removeEventListener('mouseup', onGlobalMouseUp);
+  }, [isDrawing]);
 
   const addGlobalChannel = () => {
     // Instead of creating the channel immediately, just open the modal with a special marker
@@ -3004,7 +3125,6 @@ const EditorView = ({
               onMouseDown={handleStartDrawing}
               onMouseMove={handleDrawMove}
               onMouseUp={handleStopDrawing}
-              onMouseLeave={handleStopDrawing}
               onTouchStart={handleStartDrawing}
               onTouchMove={handleDrawMove}
               onTouchEnd={handleStopDrawing}
@@ -3054,27 +3174,26 @@ const EditorView = ({
                     onClick={(e) => {
                       e.stopPropagation();
                       handleSetSelectedHotspotId(h.id);
-                      if (h.audioUrl) {
+                      const snd = (h.sounds || []).filter((s) => s.audioUrl);
+                      if (snd.length) {
                         engine.stopAll();
-                        engine.play(h.id, h.audioUrl, h.settings);
+                        snd.forEach((s) => engine.play(`${h.id}:${s.id}`, s.audioUrl!, h.settings));
                       }
                       if (window.innerWidth < 1024) setIsDrawerOpen(true);
                     }}
                     onFocus={() => {
                       setFocusedZoneId(h.id);
-                      // Clear selection when tabbing to a different zone
-                      if (selectedHotspotId !== h.id) {
-                        setSelectedHotspotId(null);
-                      }
+                      if (selectedHotspotId !== h.id) setSelectedHotspotId(null);
                     }}
                     onBlur={() => setFocusedZoneId(null)}
                     onKeyDown={(e) => {
                       if (e.key === "Enter" || e.key === " ") {
                         e.preventDefault();
                         handleSetSelectedHotspotId(h.id);
-                        if (h.audioUrl) {
+                        const snd = (h.sounds || []).filter((s) => s.audioUrl);
+                        if (snd.length) {
                           engine.stopAll();
-                          engine.play(h.id, h.audioUrl, h.settings);
+                          snd.forEach((s) => engine.play(`${h.id}:${s.id}`, s.audioUrl!, h.settings));
                         }
                         if (window.innerWidth < 1024) setIsDrawerOpen(true);
                       }
@@ -3084,27 +3203,14 @@ const EditorView = ({
                     aria-label={`Hangzóna: ${h.name}`}
                   />
                 ))}
-                {isDrawing &&
-                  currentPoints.length > 0 &&
-                  (() => {
-                    const wouldOverlap =
-                      currentPoints.length > 5 &&
-                      project.hotspots.some((hotspot) =>
-                        polygonsOverlap(currentPoints, hotspot.points),
-                      );
-                    return (
-                      <polygon
-                        points={pointsToSvgPath(currentPoints)}
-                        fill={
-                          wouldOverlap
-                            ? "rgba(239, 68, 68, 0.2)"
-                            : "rgba(99, 102, 241, 0.2)"
-                        }
-                        stroke={wouldOverlap ? "#ef4444" : "#4f46e5"}
-                        strokeWidth="0.5"
-                      />
-                    );
-                  })()}
+                {isDrawing && currentPoints.length > 0 && (
+                  <polygon
+                    points={pointsToSvgPath(currentPoints)}
+                    fill="rgba(99, 102, 241, 0.2)"
+                    stroke="#4f46e5"
+                    strokeWidth="0.5"
+                  />
+                )}
               </svg>
             </div>
           )}
@@ -3134,6 +3240,9 @@ const EditorView = ({
               toggleIntroAudioCollapse={toggleIntroAudioCollapse}
               previewingZoneId={previewingZoneId}
               toggleZonePreview={toggleZonePreview}
+              setPreviewingZoneId={setPreviewingZoneId}
+              stopZonePreviewSounds={stopZonePreviewSounds}
+              zonePreviewTimerRef={zonePreviewTimerRef}
               setIsCanvasHighlighted={setIsCanvasHighlighted}
             />
           </div>
@@ -3187,35 +3296,6 @@ const EditorView = ({
         </div>
       </div>
 
-      {/* Overlap Warning Dialog */}
-      <AlertDialog
-        open={showOverlapWarning}
-        onOpenChange={setShowOverlapWarning}
-      >
-        <AlertDialogContent className="max-w-md">
-          <div className="flex flex-col items-center text-center gap-4">
-            <div className="w-16 h-16 rounded-full bg-amber-100 flex items-center justify-center">
-              <AlertTriangle className="w-8 h-8 text-amber-600" />
-            </div>
-            <AlertDialogHeader className="space-y-3">
-              <AlertDialogTitle className="text-2xl font-semibold text-slate-900">
-                Átfedő kijelölés
-              </AlertDialogTitle>
-              <AlertDialogDescription className="text-sm text-slate-600 leading-relaxed">
-                Ez a kijelölés átfed egy meglévő zónával. A hangzónák nem fedhetik át egymást. Kérjük, rajzold a kijelölést egy másik területre, amely nem fed át meglévő zónákkal.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-          </div>
-          <AlertDialogFooter className="mt-2 flex justify-center">
-            <AlertDialogAction
-              onClick={() => setShowOverlapWarning(false)}
-              className="bg-amber-600 hover:bg-amber-700 text-white w-full sm:w-auto"
-            >
-              Értettem
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 };
@@ -3335,26 +3415,22 @@ const PlayerView = ({
   }, [introPhase, startAccessibleIntro, playIntroAudio]);
 
   const playHotspot = (hotspot: Hotspot) => {
-    if (!hotspot.audioUrl) return;
+    const sounds = hotspot.sounds || [];
+    if (!sounds.some((s) => s.audioUrl)) return;
     if (playingId === hotspot.id) return;
-    // If we switch directly from one hotspot to another,
-    // we might want to fade the old one out quickly while starting the new one
-    // The engine handles fading out if we stop it.
-    if (playingId) engine.stop(playingId);
-    engine.play(hotspot.id, hotspot.audioUrl, hotspot.settings);
+    if (playingId) {
+      const prev = project.hotspots.find((h) => h.id === playingId);
+      if (prev) (prev.sounds || []).forEach((s) => engine.stop(`${playingId}:${s.id}`));
+    }
+    sounds.forEach((s) => {
+      if (s.audioUrl) engine.play(`${hotspot.id}:${s.id}`, s.audioUrl, hotspot.settings);
+    });
     setPlayingId(hotspot.id);
   };
 
   const stopHotspot = (hotspot: Hotspot) => {
-    if (playingId === hotspot.id && !hotspot.settings.loop) {
-      engine.stop(playingId);
-      setPlayingId(null);
-    }
-    // If it IS looping, we also stop it on mouse leave (fade out)
-    // Usually in these maps, "hover" = play, "leave" = stop, even if looping.
-    // Looping just means it repeats WHILE you hover.
-    else if (playingId === hotspot.id && hotspot.settings.loop) {
-      engine.stop(playingId);
+    if (playingId === hotspot.id) {
+      (hotspot.sounds || []).forEach((s) => engine.stop(`${hotspot.id}:${s.id}`));
       setPlayingId(null);
     }
   };
@@ -3366,10 +3442,11 @@ const PlayerView = ({
 
   const handleZoneLeave = useCallback(() => {
     if (playingId) {
-      engine.stop(playingId);
+      const prev = project.hotspots.find((h) => h.id === playingId);
+      if (prev) (prev.sounds || []).forEach((s) => engine.stop(`${playingId}:${s.id}`));
       setPlayingId(null);
     }
-  }, [playingId, engine]);
+  }, [playingId, engine, project.hotspots]);
 
   const { handleTouchMove, handleTouchEnd } = useAccessiblePlayer({
     zones: project.hotspots.map((h) => ({
@@ -3393,7 +3470,7 @@ const PlayerView = ({
             variant="outline"
             size="sm"
             onClick={handleBack}
-            className="bg-black/20 text-white border-white/20 backdrop-blur-md hover:bg-black/40"
+            className="bg-black/20 text-white border-white/20 backdrop-blur-md"
           >
             <ArrowLeft className="w-4 h-4 mr-2" /> Vissza a galériához
           </Button>
@@ -3442,7 +3519,7 @@ const PlayerView = ({
           </Button>
           <Button
             variant="ghost"
-            className="text-slate-400 hover:text-slate-300"
+            className="text-slate-400 hover:text-slate-300 hover:bg-white/10 rounded-full transition-colors"
             onClick={handleBack}
           >
             <ArrowLeft className="w-4 h-4 mr-2" /> Vissza a szerkesztőbe
@@ -3459,7 +3536,7 @@ const PlayerView = ({
           variant="outline"
           size="sm"
           onClick={handleBack}
-          className="bg-black/20 text-white border-white/20 backdrop-blur-md hover:bg-black/40"
+          className="bg-black/20 text-white border-white/20 backdrop-blur-md"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
           {isShared ? "Vissza a galériához" : "Vissza a szerkesztéshez"}

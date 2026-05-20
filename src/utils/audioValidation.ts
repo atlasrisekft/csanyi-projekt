@@ -6,6 +6,8 @@ export const ALLOWED_FORMATS = {
   'audio/mp3': ['.mp3'],
   'audio/ogg': ['.ogg'],
   'audio/x-m4a': ['.m4a'],
+  'audio/wav': ['.wav'],
+  'audio/x-wav': ['.wav'],
 } as const;
 
 export const LIMITS = {
@@ -40,7 +42,7 @@ export const validateFileType = (file: File): ValidationResult => {
   if (!isAllowedFormat(mimeType)) {
     return {
       isValid: false,
-      error: `Nem támogatott formátum. Csak MP3, M4A (AAC) és OGG fájlok engedélyezettek.`,
+      error: `Nem támogatott formátum. Csak MP3, M4A (AAC), WAV és OGG fájlok engedélyezettek.`,
     };
   }
   

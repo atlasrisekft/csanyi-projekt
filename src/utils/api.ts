@@ -86,7 +86,12 @@ export const saveProjects = async (token: string, projects: any[]) => {
         hotspots: p.hotspots.map((h: any) => ({
             ...h,
             audioFile: null,
-            audioUrl: null
+            audioUrl: null,
+            sounds: (h.sounds || []).map((s: any) => ({
+                ...s,
+                audioFile: null,
+                audioUrl: null,
+            })),
         })),
         globalChannels: (p.globalChannels || []).map((c: any) => ({
             ...c,

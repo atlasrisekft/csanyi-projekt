@@ -150,7 +150,7 @@ export const AuthView = ({ onLoginSuccess, onBack }: { onLoginSuccess: () => voi
                 <Card className="w-full max-w-md">
                     <CardHeader className="text-center">
                         <CardTitle className="text-2xl font-bold text-indigo-600">Új jelszó beállítása</CardTitle>
-                        <CardDescription>Add meg az új jelszavadat</CardDescription>
+                        <CardDescription className="my-2">Add meg az új jelszavadat</CardDescription>
                     </CardHeader>
                     <CardContent>
                         {error && (
@@ -216,7 +216,7 @@ export const AuthView = ({ onLoginSuccess, onBack }: { onLoginSuccess: () => voi
             <Card className="w-full max-w-md">
                 <CardHeader className="text-center">
                     <CardTitle className="text-2xl font-bold text-indigo-600">Hangtérkép</CardTitle>
-                    <CardDescription>Jelentkezz be a hangprojektjeid kezeléséhez</CardDescription>
+                    <CardDescription className="my-1 mb-4">Jelentkezz be a hangprojektjeid kezeléséhez</CardDescription>
                 </CardHeader>
                 <CardContent>
                     {error && (
