@@ -140,7 +140,6 @@ export type Hotspot = {
   name: string;
   color: string;
   settings: AudioSettings;
-  accessibilityDescription?: string;
   // Legacy fields kept for migration from old saved projects
   audioFile?: File | null;
   audioUrl?: string | null;
@@ -154,7 +153,6 @@ export type GlobalChannel = {
   audioUrl: string | null;
   audioPath?: string | null;
   settings: AudioSettings;
-  accessibilityDescription?: string;
 };
 
 export type Project = {
@@ -169,7 +167,6 @@ export type Project = {
   introAudioUrl: string | null;
   introAudioPath?: string | null;
   introAudioLoop: boolean;
-  introAudioAccessibilityDescription?: string;
   createdAt: number;
   isPublic?: boolean;
 };
@@ -700,9 +697,11 @@ const SettingsPanelContent = ({
   introPreviewTimerRef,
   collapsedIntroAudio,
   toggleIntroAudioCollapse,
+  onImageChange,
   previewingZoneId,
-  toggleZonePreview,
   setPreviewingZoneId,
+  previewingSoundId,
+  setPreviewingSoundId,
   stopZonePreviewSounds,
   zonePreviewTimerRef,
   setIsCanvasHighlighted,
@@ -711,6 +710,7 @@ const SettingsPanelContent = ({
   selectedHotspotId: string | null;
   onUpdate: (p: Project | ((prev: Project) => Project)) => void;
   setSelectedHotspotId: (id: string | null) => void;
+  onImageChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   addGlobalChannel: () => void;
   session: any;
   openUploadModal: (type: "hotspot" | "channel", id: string) => void;
@@ -726,8 +726,9 @@ const SettingsPanelContent = ({
   collapsedIntroAudio: boolean;
   toggleIntroAudioCollapse: () => void;
   previewingZoneId: string | null;
-  toggleZonePreview: (hotspot: Hotspot) => void;
   setPreviewingZoneId: (id: string | null) => void;
+  previewingSoundId: string | null;
+  setPreviewingSoundId: (id: string | null) => void;
   stopZonePreviewSounds: (hotspotId: string, sounds: HotspotSound[]) => void;
   zonePreviewTimerRef: React.MutableRefObject<NodeJS.Timeout | null>;
   setIsCanvasHighlighted?: (highlighted: boolean) => void;
@@ -746,6 +747,35 @@ const SettingsPanelContent = ({
     <div className="p-6 space-y-8">
       <div>
         <h2 className="font-bold text-lg mb-4">Projekt beállítások</h2>
+
+        {project.imageUrl && (
+          <div className="space-y-3 mb-6">
+            <Label className="text-slate-500 text-xs uppercase tracking-wider font-bold">
+              Háttér
+            </Label>
+            <div className="bg-white border rounded-lg p-3 flex items-center gap-3">
+              <img
+                src={project.imageUrl}
+                alt="Háttér"
+                className="w-10 h-10 object-cover rounded-md shrink-0"
+              />
+              <div className="flex-1 min-w-0">
+                <label className="w-full flex items-center justify-center gap-2 h-9 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 text-sm font-medium transition-colors cursor-pointer">
+                  <Upload className="w-4 h-4" />
+                  Kép cseréje
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onClick={(e: React.MouseEvent<HTMLInputElement>) => { (e.target as HTMLInputElement).value = ''; }}
+                    onChange={onImageChange}
+                  />
+                </label>
+
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="space-y-3 mb-6" id="tour-intro-audio">
           <Label className="text-slate-500 text-xs uppercase tracking-wider font-bold">
@@ -804,35 +834,9 @@ const SettingsPanelContent = ({
               {/* Expanded settings */}
               {!collapsedIntroAudio && (
                 <div className="border-t border-slate-100 px-3 pb-4 pt-4 space-y-5">
-                  <div className="space-y-2">
-                    <Label className="text-sm font-medium text-slate-900">
-                      Akadálymentesítési leírás
-                    </Label>
-                    <textarea
-                      className="w-full bg-slate-100 rounded-lg px-3 py-2 text-sm text-slate-500 outline-none resize-none"
-                      style={{ minHeight: '120px' }}
-                      placeholder={`Írd le ezt a narrációt látássérült felhasználóknak, pl. „Meleg hang, amely végigvezet a hangtérképen."`}
-                      value={project.introAudioAccessibilityDescription ?? ""}
-                      onChange={(e) =>
-                        onUpdate((p) => ({
-                          ...p,
-                          introAudioAccessibilityDescription: e.target.value,
-                        }))
-                      }
-                    />
-                    <p className="text-xs text-slate-400">
-                      Felolvasva képernyőolvasók által (VoiceOver / TalkBack),
-                      amikor ez a narráció aktiválódik.
-                    </p>
-                  </div>
-
                   <div className="flex gap-2">
                     <button
-                      className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg border text-sm font-medium transition-colors"
-                      style={{
-                        borderColor: "#bedbff",
-                        color: "#2b7fff",
-                      }}
+                      className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg border border-blue-200 text-blue-500 hover:bg-blue-50 text-sm font-medium transition-colors"
                       onClick={toggleIntroAudioPreview}
                     >
                       {previewingIntroAudio ? (
@@ -853,8 +857,7 @@ const SettingsPanelContent = ({
 
                   <div className="border-t border-slate-100 pt-5 space-y-3">
                     <button
-                      className="w-full h-9 rounded-lg text-sm font-medium text-white"
-                      style={{ backgroundColor: "#2b7fff" }}
+                      className="w-full h-9 rounded-lg text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 transition-colors"
                       onClick={toggleIntroAudioCollapse}
                     >
                       Mentés
@@ -874,7 +877,6 @@ const SettingsPanelContent = ({
                           introAudioFile: null,
                           introAudioUrl: null,
                           introAudioPath: null,
-                          introAudioAccessibilityDescription: undefined,
                         }));
                       }}
                     >
@@ -952,42 +954,9 @@ const SettingsPanelContent = ({
                 {/* Expanded settings */}
                 {!isCollapsed && (
                   <div className="border-t border-slate-100 px-3 pb-4 pt-4 space-y-5">
-                    <div className="space-y-2">
-                      <Label className="text-sm font-medium text-slate-900">
-                        Akadálymentesítési leírás
-                      </Label>
-                      <textarea
-                        className="w-full bg-slate-100 rounded-lg px-3 py-2 text-sm text-slate-500 outline-none resize-none"
-                        style={{ minHeight: '120px' }}
-                        placeholder={`Írd le ezt a hangot látássérült felhasználóknak, pl. „Finom eső hangulata az egész élmény során."`}
-                        value={channel.accessibilityDescription ?? ""}
-                        onChange={(e) =>
-                          onUpdate((p) => ({
-                            ...p,
-                            globalChannels: p.globalChannels.map((c) =>
-                              c.id === channel.id
-                                ? {
-                                    ...c,
-                                    accessibilityDescription: e.target.value,
-                                  }
-                                : c,
-                            ),
-                          }))
-                        }
-                      />
-                      <p className="text-xs text-slate-400">
-                        Felolvasva képernyőolvasók által (VoiceOver / TalkBack),
-                        amikor ez a csatorna aktiválódik.
-                      </p>
-                    </div>
-
                     <div className="flex gap-2">
                       <button
-                        className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg border text-sm font-medium transition-colors"
-                        style={{
-                          borderColor: channel.audioUrl ? "#bedbff" : "#e2e8f0",
-                          color: channel.audioUrl ? "#2b7fff" : "#94a3b8",
-                        }}
+                        className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg border text-sm font-medium transition-colors border-blue-200 text-blue-500 hover:bg-blue-50 disabled:border-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed"
                         onClick={() =>
                           channel.audioUrl && toggleChannelPreview(channel)
                         }
@@ -1123,8 +1092,7 @@ const SettingsPanelContent = ({
 
                     <div className="border-t border-slate-100 pt-5 space-y-3">
                       <button
-                        className="w-full h-9 rounded-lg text-sm font-medium text-white"
-                        style={{ backgroundColor: "#2b7fff" }}
+                        className="w-full h-9 rounded-lg text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 transition-colors"
                         onClick={() => toggleChannelCollapse(channel.id)}
                       >
                         Mentés
@@ -1243,26 +1211,30 @@ const SettingsPanelContent = ({
                             <button
                               className="w-7 h-7 flex items-center justify-center rounded-md text-blue-500 hover:bg-blue-50 transition-colors shrink-0"
                               onClick={() => {
-                                if (previewingZoneId === h.id) {
-                                  stopZonePreviewSounds(h.id, h.sounds || []);
+                                if (previewingSoundId === s.id) {
+                                  engine.stop(`preview-zone-${h.id}:${s.id}`);
+                                  setPreviewingSoundId(null);
                                   setPreviewingZoneId(null);
+                                  if (zonePreviewTimerRef.current) clearTimeout(zonePreviewTimerRef.current);
                                 } else {
                                   if (previewingZoneId) {
                                     const prev = project.hotspots.find((z) => z.id === previewingZoneId);
                                     if (prev) stopZonePreviewSounds(previewingZoneId, prev.sounds || []);
                                   }
+                                  if (zonePreviewTimerRef.current) clearTimeout(zonePreviewTimerRef.current);
                                   if (s.audioUrl) engine.play(`preview-zone-${h.id}:${s.id}`, s.audioUrl, h.settings);
                                   setPreviewingZoneId(h.id);
-                                  if (zonePreviewTimerRef.current) clearTimeout(zonePreviewTimerRef.current);
+                                  setPreviewingSoundId(s.id);
                                   zonePreviewTimerRef.current = setTimeout(() => {
                                     engine.stop(`preview-zone-${h.id}:${s.id}`);
                                     setPreviewingZoneId(null);
+                                    setPreviewingSoundId(null);
                                   }, 5000);
                                 }
                               }}
                               disabled={!s.audioUrl}
                             >
-                              <Play className="w-3.5 h-3.5" />
+                              {previewingSoundId === s.id ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
                             </button>
                             <span className="flex-1 text-sm text-slate-700 truncate min-w-0">{s.name}</span>
                             <button
@@ -1282,24 +1254,15 @@ const SettingsPanelContent = ({
                             </button>
                           </div>
                         ))}
-                        <button
+                        <Button
                           id={(h.sounds || []).length === 0 ? "tour-zone-upload-audio" : undefined}
-                          className="w-full flex items-center justify-center gap-2 h-9 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium transition-colors"
+                          variant="outline"
+                          className="w-full h-9"
                           onClick={() => openUploadModal("hotspot", h.id)}
                         >
                           <Plus className="w-4 h-4" />
                           Hang hozzáadása
-                        </button>
-                        {(h.sounds || []).length > 0 && (
-                          <button
-                            className="w-full flex items-center justify-center gap-2 h-9 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 text-sm font-medium transition-colors"
-                            onClick={() => toggleZonePreview(h)}
-                            disabled={!(h.sounds || []).some((s) => s.audioUrl)}
-                          >
-                            {previewingZoneId === h.id ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-                            {previewingZoneId === h.id ? "Leállítás" : "Összes meghallgatása"}
-                          </button>
-                        )}
+                        </Button>
                       </div>
 
                       <ColorPicker
@@ -1314,34 +1277,6 @@ const SettingsPanelContent = ({
                         }
                       />
 
-                      <div className="space-y-2">
-                        <Label className="text-sm font-medium text-slate-900">
-                          Akadálymentesítési leírás
-                        </Label>
-                        <textarea
-                          className="w-full bg-slate-100 rounded-lg px-3 py-2 text-sm text-slate-500 outline-none resize-none"
-                          style={{ minHeight: '120px' }}
-                          placeholder={`Írd le ezt a hangot látássérült felhasználóknak, pl. „Lágy hegedűdallam, amely a jobb felső sarokban lévő arany eget jelképezi."`}
-                          value={h.accessibilityDescription ?? ""}
-                          onChange={(e) =>
-                            onUpdate((p) => ({
-                              ...p,
-                              hotspots: p.hotspots.map((z) =>
-                                z.id === h.id
-                                  ? {
-                                      ...z,
-                                      accessibilityDescription: e.target.value,
-                                    }
-                                  : z,
-                              ),
-                            }))
-                          }
-                        />
-                        <p className="text-xs text-slate-400">
-                          Felolvasva képernyőolvasók által (VoiceOver / TalkBack),
-                          amikor ez a zóna aktiválódik.
-                        </p>
-                      </div>
 
                       <div className="flex items-center justify-between">
                         <span className="text-sm text-slate-600">
@@ -1439,8 +1374,7 @@ const SettingsPanelContent = ({
                       <div className="border-t border-slate-100 pt-5 space-y-3">
                         <button
                           id="tour-zone-done-btn"
-                          className="w-full h-9 rounded-lg text-sm font-medium text-white"
-                          style={{ backgroundColor: "#2b7fff" }}
+                          className="w-full h-9 rounded-lg text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 transition-colors"
                           onClick={() => setSelectedHotspotId(null)}
                         >
                           Mentés
@@ -2731,6 +2665,7 @@ const EditorView = ({
 
   // Preview zone audio state
   const [previewingZoneId, setPreviewingZoneId] = useState<string | null>(null);
+  const [previewingSoundId, setPreviewingSoundId] = useState<string | null>(null);
   const zonePreviewTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Preview intro audio state
@@ -2882,34 +2817,38 @@ const EditorView = ({
     sounds.forEach((s) => engine.stop(`preview-zone-${hotspotId}:${s.id}`));
   };
 
-  const toggleZonePreview = (hotspot: Hotspot) => {
-    const sounds = hotspot.sounds || [];
-    if (!sounds.some((s) => s.audioUrl)) return;
+  const getImageDimensions = (src: string): Promise<{ width: number; height: number }> =>
+    new Promise((resolve) => {
+      const img = new window.Image();
+      img.onload = () => resolve({ width: img.naturalWidth, height: img.naturalHeight });
+      img.src = src;
+    });
 
-    if (previewingZoneId === hotspot.id) {
-      stopZonePreviewSounds(hotspot.id, sounds);
-      setPreviewingZoneId(null);
-      if (zonePreviewTimerRef.current) {
-        clearTimeout(zonePreviewTimerRef.current);
-        zonePreviewTimerRef.current = null;
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const newUrl = URL.createObjectURL(file);
+    if (project.imageUrl) {
+      const [newDims, curDims] = await Promise.all([
+        getImageDimensions(newUrl),
+        getImageDimensions(project.imageUrl),
+      ]);
+      if (newDims.width !== curDims.width || newDims.height !== curDims.height) {
+        toast.error("Az új kép mérete eltér az eredetitől. Ugyanolyan méretű képet tölts fel a zónák megőrzéséhez.");
+        URL.revokeObjectURL(newUrl);
+        return;
       }
-    } else {
-      if (previewingZoneId) {
-        const prev = project.hotspots.find((h) => h.id === previewingZoneId);
-        if (prev) stopZonePreviewSounds(previewingZoneId, prev.sounds || []);
-      }
-      if (zonePreviewTimerRef.current) clearTimeout(zonePreviewTimerRef.current);
-
-      sounds.forEach((s) => {
-        if (s.audioUrl) engine.play(`preview-zone-${hotspot.id}:${s.id}`, s.audioUrl, hotspot.settings);
-      });
-      setPreviewingZoneId(hotspot.id);
-
-      zonePreviewTimerRef.current = setTimeout(() => {
-        stopZonePreviewSounds(hotspot.id, sounds);
-        setPreviewingZoneId(null);
-        zonePreviewTimerRef.current = null;
-      }, 5000);
+    }
+    const sanitizedName = sanitizeFilename(file.name);
+    const path = `${session.user.id}/${project.id}/bg_${Date.now()}_${sanitizedName}`;
+    onUpdate((prev) => ({ ...prev, imageFile: file, imageUrl: newUrl, imagePath: path }));
+    try {
+      const actualPath = await uploadFile(session.access_token, file, path);
+      onUpdate((prev) => ({ ...prev, imagePath: actualPath }));
+      toast.success("A kép sikeresen frissítve.");
+    } catch (err) {
+      console.error("Image upload failed", err);
+      toast.error("A kép feltöltése sikertelen. Kérjük, próbáld újra.");
     }
   };
 
@@ -3108,6 +3047,7 @@ const EditorView = ({
                     type="file"
                     accept="image/*"
                     className="hidden"
+                    onClick={(e: React.MouseEvent<HTMLInputElement>) => { (e.target as HTMLInputElement).value = ''; }}
                     onChange={handleImageUpload}
                   />
                 </label>
@@ -3224,6 +3164,7 @@ const EditorView = ({
               selectedHotspotId={selectedHotspotId}
               onUpdate={onUpdate}
               setSelectedHotspotId={handleSetSelectedHotspotId}
+              onImageChange={handleImageChange}
               addGlobalChannel={addGlobalChannel}
               session={session}
               openUploadModal={openUploadModal}
@@ -3239,8 +3180,9 @@ const EditorView = ({
               collapsedIntroAudio={collapsedIntroAudio}
               toggleIntroAudioCollapse={toggleIntroAudioCollapse}
               previewingZoneId={previewingZoneId}
-              toggleZonePreview={toggleZonePreview}
               setPreviewingZoneId={setPreviewingZoneId}
+              previewingSoundId={previewingSoundId}
+              setPreviewingSoundId={setPreviewingSoundId}
               stopZonePreviewSounds={stopZonePreviewSounds}
               zonePreviewTimerRef={zonePreviewTimerRef}
               setIsCanvasHighlighted={setIsCanvasHighlighted}
@@ -3272,6 +3214,7 @@ const EditorView = ({
                   selectedHotspotId={selectedHotspotId}
                   onUpdate={onUpdate}
                   setSelectedHotspotId={handleSetSelectedHotspotId}
+                  onImageChange={handleImageChange}
                   addGlobalChannel={addGlobalChannel}
                   session={session}
                   openUploadModal={openUploadModal}
@@ -3287,7 +3230,11 @@ const EditorView = ({
                   collapsedIntroAudio={collapsedIntroAudio}
                   toggleIntroAudioCollapse={toggleIntroAudioCollapse}
                   previewingZoneId={previewingZoneId}
-                  toggleZonePreview={toggleZonePreview}
+                  setPreviewingZoneId={setPreviewingZoneId}
+                  previewingSoundId={previewingSoundId}
+                  setPreviewingSoundId={setPreviewingSoundId}
+                  stopZonePreviewSounds={stopZonePreviewSounds}
+                  zonePreviewTimerRef={zonePreviewTimerRef}
                   setIsCanvasHighlighted={setIsCanvasHighlighted}
                 />
               </div>
@@ -3451,7 +3398,6 @@ const PlayerView = ({
   const { handleTouchMove, handleTouchEnd } = useAccessiblePlayer({
     zones: project.hotspots.map((h) => ({
       id: h.id,
-      accessibilityDescription: h.accessibilityDescription,
     })),
     onZoneEnter: handleZoneEnter,
     onZoneLeave: handleZoneLeave,

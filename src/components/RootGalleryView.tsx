@@ -82,26 +82,25 @@ export const RootGalleryView = ({
           backgroundImage: `url(${csanyiHatter})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
-          backgroundColor: '#5b4ce0',
+          backgroundColor: '#4f46e5',
         }}
       >
-        <div className="max-w-6xl mx-auto px-6 sm:px-8 py-10 sm:py-16 grid grid-cols-1 sm:grid-cols-2
- items-center gap-6 sm:gap-8">
-          <div className="text-white max-w-xl">
-            <h1 className="text-2xl sm:text-4xl lg:text-5xl font-bold leading-tight">
+        <div className="max-w-6xl mx-auto px-4 sm:px-8 py-10 sm:py-16 grid grid-cols-1 sm:grid-cols-2 items-center gap-6 sm:gap-8">
+          <div className="text-white max-w-xl pt-6">
+            <h1 className="text-2xl pt-2s sm:text-4xl lg:text-5xl font-bold leading-tight">
               Üdv a hangtérképen!
             </h1>
-            <p className="mt-3 sm:mt-4 text-sm sm:text-lg leading-relaxed text-white/90">
+            <p className="mt-3 mb-6 sm:mt-4 text-sm sm:text-lg leading-relaxed text-white/90">
               A Hangtérkép egy immerzív élmény, amely hangokon keresztül teszi értelmezhetővé és átélhetővé a képeket látás nélkül. A képeken kijelölt zónákhoz kapcsolódó hangok, narrációk és háttércsatornák segítenek feltérképezni a tartalmat — mintha egy láthatatlan térképen tájékozódnál.
             </p>
           </div>
           <img
-  src={csanyiIkon}
-  alt=""
-  aria-hidden="true"
-  className="w-full max-w-[220px] sm:max-w-[260px] lg:max-w-[300px] h-auto mx-auto sm:mx-0 pointer-events-none select-none"
-  draggable={false}
-/>
+            src={csanyiIkon}
+            alt=""
+            aria-hidden="true"
+            className="w-full max-w-[300px] sm:max-w-[260px] lg:max-w-[300px] h-auto mx-auto sm:mx-0 pointer-events-none select-none"
+            draggable={false}
+          />
         </div>
       </section>
 
