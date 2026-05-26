@@ -56,7 +56,7 @@ export const RootGalleryView = ({
           <Button
             onClick={onMyProjectsClick}
             aria-label="Ugrás a saját projektjeimhez"
-            className="bg-indigo-600 hover:bg-indigo-700 text-white shrink-0 rounded-full h-10 w-10 p-0 sm:rounded-md sm:w-auto sm:px-4 flex items-center justify-center gap-2"
+            className="bg-indigo-600 hover:bg-indigo-700 text-white shrink-0 rounded-full h-10 w-10 p-0 sm:rounded-md sm:w-auto sm:px-4 flex items-center justify-center gap-2 cursor-pointer"
           >
             <LayoutGrid className="w-4 h-4" aria-hidden="true" />
             <span className="hidden sm:inline">Saját projektek</span>
@@ -85,7 +85,7 @@ export const RootGalleryView = ({
           backgroundColor: '#4f46e5',
         }}
       >
-        <div className="max-w-6xl mx-auto px-4 sm:px-8 py-10 sm:py-16 grid grid-cols-1 sm:grid-cols-2 items-center gap-6 sm:gap-8">
+        <div className="max-w-6xl mx-auto px-9 sm:px-8 py-10 sm:py-16 grid grid-cols-1 sm:grid-cols-2 items-center gap-6 sm:gap-8">
           <div className="text-white max-w-xl pt-6">
             <h1 className="text-2xl pt-2s sm:text-4xl lg:text-5xl font-bold leading-tight">
               Üdv a hangtérképen!
@@ -142,11 +142,8 @@ export const RootGalleryView = ({
                   )}
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
                 </div>
-                <CardContent className="p-4">
+                <CardContent className="px-4 p-4">
                   <h3 className="font-semibold text-slate-800 truncate">{p.title}</h3>
-                  <p className="text-xs text-slate-500 mt-1">
-                    {p.hotspotCount} zóna
-                  </p>
                 </CardContent>
               </Card>
             ))

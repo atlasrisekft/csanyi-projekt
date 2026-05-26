@@ -153,24 +153,17 @@ export const CuratorGalleriesView = ({
                 className="group transition-colors duration-200 border border-slate-200 overflow-hidden hover:border-indigo-300"
               >
                 <div
-                  className="h-36 bg-gradient-to-br from-indigo-50 via-slate-50 to-purple-50 flex items-center justify-center cursor-pointer"
+                  className="h-48 bg-gradient-to-br from-indigo-50 via-slate-50 to-purple-50 flex items-center justify-center cursor-pointer"
                   onClick={() => onEdit(gallery.id)}
                 >
                   <LayoutGrid className="w-10 h-10 text-indigo-200 group-hover:text-indigo-400 transition-colors" />
                 </div>
-                <CardContent className="p-4">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex-1 cursor-pointer min-w-0" onClick={() => onEdit(gallery.id)}>
-                      <h3 className="font-semibold text-slate-800 truncate">{gallery.title}</h3>
-                      <p className="text-xs text-slate-500 mt-0.5">
-                        {gallery.projectIds.length} hangtérkép
-                      </p>
-                      {gallery.description && (
-                        <p className="text-xs text-slate-400 mt-1.5 line-clamp-2 leading-relaxed">
-                          {gallery.description}
-                        </p>
-                      )}
-                    </div>
+                <CardContent className="px-4 py-2.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <h3
+                      className="font-semibold text-slate-800 truncate flex-1 min-w-0 cursor-pointer"
+                      onClick={() => onEdit(gallery.id)}
+                    >{gallery.title}</h3>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">

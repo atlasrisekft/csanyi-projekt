@@ -71,7 +71,7 @@ export const AppHeader = ({ children, onBrandClick, description }: AppHeaderProp
           WebkitBackdropFilter: 'blur(8px)',
         }}
       >
-        <div className="max-w-6xl mx-auto px-6 sm:px-8 h-16 flex items-center justify-between gap-4">
+        <div className="max-w-6xl mx-auto px-9 sm:px-8 h-16 flex items-center justify-between gap-4">
           {onBrandClick ? (
             <button
               type="button"

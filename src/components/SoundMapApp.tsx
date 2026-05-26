@@ -621,6 +621,7 @@ const ShareDialogContent = ({
             size="sm"
             onClick={createLink}
             disabled={isLoading}
+            className="cursor pointer h-9"
           >
             {isLoading ? "..." : "Megosztás"}
           </Button>
@@ -2374,37 +2375,43 @@ const GalleryView = ({
         onBrandClick={onGoToPublicGallery}
         description="Saját projektjeid kezelése — készíts és szerkessz hangtérképeket"
       >
-        <Button
-          variant="outline"
-          onClick={onGoToPublicGallery}
-          aria-label="Vissza a nyilvános galériához"
-          className="text-slate-500 hover:text-indigo-600 h-9 w-10 p-0 sm:w-auto sm:px-3 flex items-center justify-center gap-2"
-        >
-          <ArrowLeft className="w-4 h-4 shrink-0" aria-hidden="true" />
-          <span className="hidden sm:inline text-sm font-medium">Nyilvános galéria</span>
-        </Button>
-        <Button
-          variant="outline"
-          onClick={onProfile}
-          aria-label="Profil megnyitása"
-          className="text-slate-500 hover:text-indigo-600 h-9 w-10 p-0 sm:w-auto sm:px-3 flex items-center justify-center gap-2"
-        >
-          <UserIcon className="w-5 h-5 shrink-0" aria-hidden="true" />
-          <span className="hidden sm:inline text-sm font-medium">
-            {session?.user?.user_metadata?.full_name ||
-              session?.user?.email?.split("@")[0] ||
-              "Felhasználó"}
-          </span>
-        </Button>
-        <Button
-          id="tour-create-project"
-          onClick={onCreate}
-          aria-label="Új projekt létrehozása"
-            className="bg-indigo-600 hover:bg-indigo-700 text-white shrink-0 h-9 w-9 sm:w-auto sm:px-4 p-0 flex items-center justify-center"
-        >
-          <Plus className="w-4 h-4" aria-hidden="true" />
-          <span className="hidden sm:inline">Új projekt</span>
-        </Button>
+       <Button
+  variant="outline"
+  onClick={onGoToPublicGallery}
+  aria-label="Vissza a nyilvános galériához"
+  className="text-slate-500 hover:text-indigo-600 h-9 min-h-9 w-9 min-w-9 sm:w-auto sm:px-3 p-0 flex items-center justify-center gap-2 cursor-pointer box-border"
+>
+  <ArrowLeft className="w-4 h-4 shrink-0" aria-hidden="true" />
+  <span className="hidden sm:inline text-sm font-medium">
+    Nyilvános galéria
+  </span>
+</Button>
+
+<Button
+  variant="outline"
+  onClick={onProfile}
+  aria-label="Profil megnyitása"
+  className="text-slate-500 hover:text-indigo-600 h-9 min-h-9 w-9 min-w-9 sm:w-auto sm:px-3 p-0 flex items-center justify-center gap-2 cursor-pointer box-border"
+>
+  <UserIcon className="w-4 h-4 shrink-0" aria-hidden="true" />
+  <span className="hidden sm:inline text-sm font-medium">
+    {session?.user?.user_metadata?.full_name ||
+      session?.user?.email?.split("@")[0] ||
+      "Felhasználó"}
+  </span>
+</Button>
+
+<Button
+  id="tour-create-project"
+  onClick={onCreate}
+  aria-label="Új projekt létrehozása"
+  className="bg-indigo-600 hover:bg-indigo-700 text-white h-9 min-h-9 w-9 min-w-9 sm:w-auto sm:px-3 p-0 flex items-center justify-center gap-2 shrink-0 cursor-pointer box-border"
+>
+  <Plus className="w-4 h-4 shrink-0" aria-hidden="true" />
+  <span className="hidden sm:inline text-sm font-medium">
+    Új projekt
+  </span>
+</Button>
       </AppHeader>
 
       <main id="main-content" role="main" className="max-w-6xl mx-auto p-8">
@@ -2450,10 +2457,7 @@ const GalleryView = ({
                       <h3 className="font-semibold text-slate-800 truncate">
                         {project.title}
                       </h3>
-                      <p className="text-xs text-slate-500 mt-1">
-                        {project.hotspots.length} zóna •{" "}
-                        {project.globalChannels?.length || 0} csatorna
-                      </p>
+                     
                     </div>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -2988,7 +2992,7 @@ const EditorView = ({
             variant="ghost"
             size="icon"
             onClick={onBack}
-            className="-ml-2 shrink-0"
+            className="-ml-2 shrink-0 cursor-pointer"
           >
             <ArrowLeft className="w-5 h-5" />
           </Button>
@@ -3004,7 +3008,7 @@ const EditorView = ({
               <Button
                 variant="outline"
                 size="sm"
-                className="hidden sm:flex h-9"
+                className="hidden sm:flex h-9 cursor-pointer"
                 id="tour-share-btn"
                 onClick={onShare}
               >
@@ -3026,7 +3030,7 @@ const EditorView = ({
           <Button
             id="tour-preview-btn"
             onClick={onPreview}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white shrink-0 h-9 w-9 sm:w-auto sm:px-4 p-0 flex items-center justify-center"
+            className="bg-indigo-600 hover:bg-indigo-700 text-white shrink-0 h-9 w-9 sm:w-auto sm:px-4 p-0 flex items-center justify-center cursor-pointer"
             disabled={!project.imageUrl}
           >
             <Play className="w-4 h-4 sm:mr-2" />

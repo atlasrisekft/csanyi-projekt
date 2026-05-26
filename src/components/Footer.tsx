@@ -21,7 +21,7 @@ export const Footer = ({ onTermsClick, onPrivacyClick }: FooterProps) => {
             <button
               type="button"
               onClick={onTermsClick}
-              className="text-xs text-slate-400 hover:text-white transition-colors"
+              className="text-xs text-slate-400 hover:text-white transition-colors cursor-pointer"
             >
               ÁSZF      
             </button>
@@ -29,7 +29,7 @@ export const Footer = ({ onTermsClick, onPrivacyClick }: FooterProps) => {
             <button
               type="button"
               onClick={onPrivacyClick}
-              className="text-xs text-slate-400 hover:text-white transition-colors"
+              className="text-xs text-slate-400 hover:text-white transition-colors cursor-pointer"
             >
               Adatvédelmi tájékoztató
             </button>

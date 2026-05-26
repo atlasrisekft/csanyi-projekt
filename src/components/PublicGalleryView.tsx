@@ -42,7 +42,7 @@ export const PublicGalleryView = ({ data, error, onOpenProject, isLoadingProject
     <div className="min-h-screen bg-slate-50">
       {/* Hero header */}
       <div className="bg-white border-b border-slate-200">
-        <div className="max-w-6xl mx-auto px-6 sm:px-8 py-14">
+        <div className="max-w-6xl mx-auto px-9 sm:px-8 py-14">
           <p className="text-xs font-semibold uppercase tracking-widest text-indigo-500 mb-3">
             Hanggaléria
           </p>
