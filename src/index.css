@@ -80,7 +80,7 @@
     --color-indigo-200: oklch(.87 .065 274.039);
     --color-indigo-300: oklch(.785 .115 274.713);
     --color-indigo-500: oklch(.585 .233 277.117);
-    --color-indigo-600: oklch(.511 .262 276.966);
+    --color-indigo-600: #4f39f6;
     --color-indigo-700: oklch(.457 .24 277.023);
     --color-slate-50: oklch(.984 .003 247.858);
     --color-slate-100: oklch(.968 .007 247.896);

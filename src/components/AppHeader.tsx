@@ -1,5 +1,5 @@
 import React from 'react';
-import { Headphones } from 'lucide-react';
+import logo from '../assets/logo.svg';
 
 interface AppHeaderProps {
   children?: React.ReactNode;
@@ -20,12 +20,9 @@ export const AppHeader = ({ children, onBrandClick, description }: AppHeaderProp
         style={{
           width: '2rem',
           height: '2rem',
-          borderRadius: '0.5rem',
-          backgroundImage:
-            'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
         }}
       >
-        <Headphones className="w-4 h-4 text-white" />
+      <img src={logo} alt="Logo" />
       </div>
       <div className="flex flex-col min-w-0 leading-tight">
         <span className="font-bold text-slate-900 truncate">Hangtérkép</span>
@@ -86,7 +83,7 @@ export const AppHeader = ({ children, onBrandClick, description }: AppHeaderProp
             <a
               href="#main-content"
               aria-label={`Hangtérkép — ${tagline}`}
-              className="flex items-center gap-3 min-w-0"
+              className="flex items-center gap-2 min-w-0"
               style={{ textDecoration: 'none', color: 'inherit' }}
             >
               {brandContent}
