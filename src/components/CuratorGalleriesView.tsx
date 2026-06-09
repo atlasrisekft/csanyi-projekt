@@ -114,7 +114,7 @@ export const CuratorGalleriesView = ({
             <div>
               <h1 className="text-3xl font-bold text-slate-900">Galériáim</h1>
               <p className="text-slate-500 mt-1">
-                Rendezd és oszd meg hangtérkép-gyűjteményeidet.
+                Rendezd és oszd meg hangösvény-gyűjteményeidet.
               </p>
             </div>
           </div>
@@ -139,7 +139,7 @@ export const CuratorGalleriesView = ({
             </div>
             <h3 className="text-lg font-medium text-slate-900">Még nincsenek galériák</h3>
             <p className="text-sm text-slate-500 mt-1">
-              Hozz létre galériát a hangtérképeid rendezéséhez és megosztásához.
+              Hozz létre galériát a hangösvényeid rendezéséhez és megosztásához.
             </p>
             <Button onClick={onCreate} variant="outline" className="mt-4">
               Galéria létrehozása
@@ -190,7 +190,7 @@ export const CuratorGalleriesView = ({
                             <AlertDialogHeader>
                               <AlertDialogTitle>Galéria törlése?</AlertDialogTitle>
                               <AlertDialogDescription>
-                                Ez véglegesen törli a(z) „{gallery.title}" galériát. A hangtérképeid nem érintettek.
+                                Ez véglegesen törli a(z) „{gallery.title}" galériát. A hangösvényeid nem érintettek.
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>

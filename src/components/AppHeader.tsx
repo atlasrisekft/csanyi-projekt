@@ -25,7 +25,7 @@ export const AppHeader = ({ children, onBrandClick, description }: AppHeaderProp
       <img src={logo} alt="Logo" />
       </div>
       <div className="flex flex-col min-w-0 leading-tight">
-        <span className="font-bold text-slate-900 truncate">Hangtérkép</span>
+        <span className="font-bold text-slate-900 truncate">Hangösvény</span>
         <span
           className="hidden sm:block text-slate-500 truncate"
           style={{ fontSize: '0.75rem', marginTop: '0.125rem' }}
@@ -73,7 +73,7 @@ export const AppHeader = ({ children, onBrandClick, description }: AppHeaderProp
             <button
               type="button"
               onClick={onBrandClick}
-              aria-label={`Hangtérkép — ${tagline}`}
+              aria-label={`Hangösvény — ${tagline}`}
               className="flex items-center gap-3 min-w-0 cursor-pointer"
               style={{ background: 'none', border: 'none', padding: 0, color: 'inherit', textAlign: 'left' }}
             >
@@ -82,7 +82,7 @@ export const AppHeader = ({ children, onBrandClick, description }: AppHeaderProp
           ) : (
             <a
               href="#main-content"
-              aria-label={`Hangtérkép — ${tagline}`}
+              aria-label={`Hangösvény — ${tagline}`}
               className="flex items-center gap-2 min-w-0"
               style={{ textDecoration: 'none', color: 'inherit' }}
             >

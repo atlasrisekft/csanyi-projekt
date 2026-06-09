@@ -795,7 +795,7 @@ const SettingsPanelContent = ({
                 Narráció hozzáadása
               </p>
               <p className="text-xs text-slate-400 mt-1">
-                Vezess be a hangtérképedbe hanganyaggal
+                Vezess be a hangösvényeidbe hanganyaggal
               </p>
             </div>
           ) : (
@@ -1522,7 +1522,7 @@ const TOUR_STEPS: TourStep[] = [
     id: "create-project",
     targetId: "tour-create-project",
     title: "Projekt indítása",
-    description: "Kattints ide az első hangtérkép-projekted létrehozásához.",
+    description: "Kattints ide az első hangösvény-projekted létrehozásához.",
     placement: "right",
   },
   {
@@ -1593,7 +1593,7 @@ const TOUR_STEPS: TourStep[] = [
   {
     id: "share",
     targetId: "tour-share-btn",
-    title: "Hangtérképed megosztása",
+    title: "Hangösvényed megosztása",
     description:
       "Hozz létre megosztható linket, amelyet tableteken vagy más eszközökön lehet megnyitni. A felhasználók érintéssel fedezhetik fel, így mindenki számára elérhető.",
     placement: "bottom",
@@ -2190,7 +2190,7 @@ export const SoundMapApp = () => {
 
   getPublicProjectById(projectId)
     .then((p: Project) => setSelectedGalleryProject(p))
-    .catch(() => toast.error("A hangtérkép betöltése sikertelen"))
+    .catch(() => toast.error("A hangösvény betöltése sikertelen"))
     .finally(() => setIsLoadingGalleryProject(false));
 }}
           isLoadingProject={isLoadingGalleryProject}
@@ -2373,7 +2373,7 @@ const GalleryView = ({
     <div className="min-h-screen bg-slate-50">
       <AppHeader
         onBrandClick={onGoToPublicGallery}
-        description="Saját projektjeid kezelése — készíts és szerkessz hangtérképeket"
+        description="Saját projektjeid kezelése — készíts és szerkessz hangösvényeket"
       >
        <Button
   variant="outline"
@@ -2418,7 +2418,7 @@ const GalleryView = ({
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-slate-900">Projektjeim</h1>
           <p className="text-slate-500 mt-1">
-            Válassz ki egy hangtérképet szerkesztéshez, vagy hozz létre egy újat.
+            Válassz ki egy hangösvényt szerkesztéshez, vagy hozz létre egy újat.
           </p>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -3019,7 +3019,7 @@ const EditorView = ({
               <DialogHeader>
                 <DialogTitle>Projekt megosztása</DialogTitle>
                 <DialogDescription>
-                  Bárki megtekintheti és lejátszhatja a hangtérképedet ezzel a linkkel.
+                  Bárki megtekintheti és lejátszhatja a hangösvényedet ezzel a linkkel.
                   Tökéletes tabletekhez.
                 </DialogDescription>
               </DialogHeader>
@@ -3345,7 +3345,7 @@ const PlayerView = ({
     if (introPhase !== 'idle') return;
 
     const name = project.title ? `${project.title}. ` : '';
-    const instructions = `${name}Ez egy interaktív hangtérkép. A bevezetés után húzd az ujjadat a képen a felfedezéshez. Minden zóna hangot játszik le, és néhány másodperc után felolvassa a leírást. Érintsd meg a képernyőt az átugráshoz.`;
+    const instructions = `${name}Ez egy interaktív hangösvény. A bevezetés után húzd az ujjadat a képen a felfedezéshez. Minden zóna hangot játszik le, és néhány másodperc után felolvassa a leírást. Érintsd meg a képernyőt az átugráshoz.`;
 
     const utterance = new SpeechSynthesisUtterance(instructions);
     setIntroPhase('speaking');
@@ -3413,7 +3413,7 @@ const PlayerView = ({
         className="fixed inset-0 bg-slate-900 flex flex-col items-center justify-center p-6 text-center z-[100]"
         onClick={handleIntroTap}
         role="main"
-        aria-label={project.title || 'Interaktív hangtérkép'}
+        aria-label={project.title || 'Interaktív hangösvény'}
       >
         <div className="absolute top-4 left-4 z-50" onClick={(e) => e.stopPropagation()}>
           <Button
@@ -3427,14 +3427,14 @@ const PlayerView = ({
         </div>
         <span className="sr-only">
           {introPhase === 'idle'
-            ? 'Interaktív hangtérkép. Érintsd meg a képernyőt a bevezetés meghallgatásához.'
+            ? 'Interaktív hangösvény. Érintsd meg a képernyőt a bevezetés meghallgatásához.'
             : introPhase === 'speaking'
             ? 'A bevezetés lejátszás alatt van. Kérjük, várj.'
-            : 'Érintsd meg a képernyőt a hangtérkép felfedezéséhez.'}
+            : 'Érintsd meg a képernyőt a hangösvény felfedezéséhez.'}
         </span>
         <div className="max-w-md w-full space-y-4 pointer-events-none" aria-hidden="true">
-          <h1 className="text-4xl font-bold text-white">{project.title || 'Hangtérkép'}</h1>
-          <p className="text-slate-400">Interaktív hangtérkép</p>
+          <h1 className="text-4xl font-bold text-white">{project.title || 'Hangösvény'}</h1>
+          <p className="text-slate-400">Interaktív hangösvény</p>
           {introPhase === 'idle' && (
             <p className="text-slate-500 text-sm mt-8">Érintsd meg a képernyőt a kezdéshez</p>
           )}
@@ -3457,7 +3457,7 @@ const PlayerView = ({
             <h1 className="text-4xl font-bold text-white mb-2">
               {project.title}
             </h1>
-            <p className="text-slate-400">Interaktív hangtérkép</p>
+            <p className="text-slate-400">Interaktív hangösvény</p>
           </div>
           <Button
             size="lg"
@@ -3498,7 +3498,7 @@ const PlayerView = ({
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
         role="application"
-        aria-label="Interaktív hangtérkép. Húzd az ujjadat a zónák felfedezéséhez."
+        aria-label="Interaktív hangösvény. Húzd az ujjadat a zónák felfedezéséhez."
       >
         <span className="sr-only">
           Helyezd az ujjadat a képre és húzd a felfedezéshez. A hang akkor szólal meg, amikor belépel egy zónába. Néhány másodperc után egy leírás is felolvasásra kerül.

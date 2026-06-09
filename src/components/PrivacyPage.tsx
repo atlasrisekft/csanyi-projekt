@@ -61,7 +61,7 @@ export const PrivacyPage = ({ onBack }: Props) => {
                   </tr>
                   <tr>
                     <td className="px-4 py-3">Feltöltött képek és hangfájlok</td>
-                    <td className="px-4 py-3">Hangtérkép projekt tárolása és megjelenítése</td>
+                    <td className="px-4 py-3">Hangösvény projekt tárolása és megjelenítése</td>
                     <td className="px-4 py-3">Szerződés teljesítése</td>
                   </tr>
                   <tr>
@@ -118,7 +118,7 @@ export const PrivacyPage = ({ onBack }: Props) => {
           <div>
             <h2 className="text-lg font-semibold text-slate-900 mb-3">6. Sütik (cookie-k)</h2>
             <p>
-              A Hangtérkép kizárólag a működéshez szükséges munkamenet-sütiket használ. Harmadik
+              A Hangösvény kizárólag a működéshez szükséges munkamenet-sütiket használ. Harmadik
               fél által elhelyezett analitikai vagy marketing célú sütiket az alkalmazás nem alkalmaz.
             </p>
           </div>

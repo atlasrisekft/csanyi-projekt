@@ -51,7 +51,7 @@ export const RootGalleryView = ({
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
-      <AppHeader description="Böngészd a közösség által megosztott interaktív hangtérképeket">
+      <AppHeader description="Böngészd a közösség által megosztott interaktív hangösvényeket">
         {session ? (
           <Button
             onClick={onMyProjectsClick}
@@ -88,10 +88,10 @@ export const RootGalleryView = ({
         <div className="max-w-6xl mx-auto px-9 sm:px-8 py-10 sm:py-16 grid grid-cols-1 sm:grid-cols-2 items-center gap-6 sm:gap-8">
           <div className="text-white max-w-xl pt-6">
             <h1 className="text-2xl pt-2s sm:text-4xl lg:text-5xl font-bold leading-tight">
-              Üdv a hangtérképen!
+              Üdv a hangösvényen!
             </h1>
             <p className="mt-3 mb-6 sm:mt-4 text-sm sm:text-lg leading-relaxed text-white/90">
-              A Hangtérkép egy immerzív élmény, amely hangokon keresztül teszi értelmezhetővé és átélhetővé a képeket látás nélkül. A képeken kijelölt zónákhoz kapcsolódó hangok, narrációk és háttércsatornák segítenek feltérképezni a tartalmat — mintha egy láthatatlan térképen tájékozódnál.
+              A Hangösvény egy immerzív élmény, amely hangokon keresztül teszi értelmezhetővé és átélhetővé a képeket látás nélkül. A képeken kijelölt zónákhoz kapcsolódó hangok, narrációk és háttércsatornák segítenek feltérképezni a tartalmat — mintha egy láthatatlan térképen tájékozódnál.
             </p>
           </div>
           <img
@@ -108,7 +108,7 @@ export const RootGalleryView = ({
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-slate-900">Közösségi galéria</h1>
           <p className="text-slate-500 mt-1">
-            Fedezd fel az interaktív hangtérképeket, amiket mások készítettek.
+            Fedezd fel az interaktív hangösvényeket, amiket mások készítettek.
           </p>
         </div>
 
@@ -116,12 +116,12 @@ export const RootGalleryView = ({
           {isLoading ? (
             <div className="col-span-full flex flex-col items-center justify-center py-20 text-slate-500">
               <Loader2 className="w-8 h-8 animate-spin text-indigo-600 mb-4" />
-              <p>Hangtérképek betöltése...</p>
+              <p>Hangösvények betöltése...</p>
             </div>
           ) : projects.length === 0 ? (
             <div className="col-span-full py-20 text-center bg-white rounded-xl border border-dashed border-slate-300">
               <ImageIcon className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-              <p className="text-slate-400">Még nincsenek nyilvános hangtérképek.</p>
+              <p className="text-slate-400">Még nincsenek nyilvános hangösvények.</p>
             </div>
           ) : (
             visibleProjects.map((p) => (
@@ -154,11 +154,11 @@ export const RootGalleryView = ({
           <div className="flex justify-center" style={{ marginTop: '3rem' }}>
             <Button
               onClick={handleLoadMore}
-              aria-label={`További ${Math.min(PAGE_SIZE, remaining)} hangtérkép betöltése`}
+              aria-label={`További ${Math.min(PAGE_SIZE, remaining)} hangösvény betöltése`}
               className="bg-indigo-600 hover:bg-indigo-700 text-white h-10 px-4 flex items-center justify-center gap-2"
             >
               <Plus className="w-4 h-4" aria-hidden="true" />
-              További {Math.min(PAGE_SIZE, remaining)} hangtérkép betöltése
+              További {Math.min(PAGE_SIZE, remaining)} hangösvény betöltése
               <span className="text-white/70 text-sm font-normal">
                 ({visibleCount}/{projects.length})
               </span>
@@ -176,7 +176,7 @@ export const RootGalleryView = ({
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 backdrop-blur-sm">
           <div className="bg-white rounded-2xl p-6 flex items-center gap-3">
             <Loader2 className="w-5 h-5 animate-spin text-indigo-600" />
-            <span className="text-sm font-medium text-slate-700">Hangtérkép betöltése...</span>
+            <span className="text-sm font-medium text-slate-700">Hangösvény betöltése...</span>
           </div>
         </div>
       )}

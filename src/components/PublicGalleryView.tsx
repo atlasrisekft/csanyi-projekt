@@ -61,7 +61,7 @@ export const PublicGalleryView = ({ data, error, onOpenProject, isLoadingProject
       <div className="max-w-6xl mx-auto px-6 sm:px-8 py-12">
         {data.projects.length === 0 ? (
           <p className="text-slate-400 text-center py-20">
-            Ez a galéria még nem tartalmaz hangtérképeket.
+            Ez a galéria még nem tartalmaz hangösvényeket.
           </p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -123,7 +123,7 @@ export const PublicGalleryView = ({ data, error, onOpenProject, isLoadingProject
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 backdrop-blur-sm">
           <div className="bg-white rounded-2xl p-6 flex items-center gap-3">
             <Loader2 className="w-5 h-5 animate-spin text-indigo-600" />
-            <span className="text-sm font-medium text-slate-700">Hangtérkép betöltése...</span>
+            <span className="text-sm font-medium text-slate-700">Hangösvény betöltése...</span>
           </div>
         </div>
       )}

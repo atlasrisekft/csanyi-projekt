@@ -100,12 +100,12 @@ export const CuratorGalleryEditorView = ({ gallery, allProjects, onSave, onBack 
         {/* Selected projects */}
         <div className="bg-white rounded-xl border border-slate-200 p-6 mb-6">
           <h2 className="text-sm font-semibold text-slate-900 mb-4">
-            Hangtérképek ebben a galériában{' '}
+            Hangösvények ebben a galériában{' '}
             <span className="text-slate-400 font-normal">({selectedProjects.length})</span>
           </h2>
           {selectedProjects.length === 0 ? (
             <p className="text-sm text-slate-400 text-center py-6">
-              Még nem adtál hozzá hangtérképet. Válassz egyet alul.
+              Még nem adtál hozzá hangösvényt. Válassz egyet alul.
             </p>
           ) : (
             <ul className="space-y-2">
@@ -154,7 +154,7 @@ export const CuratorGalleryEditorView = ({ gallery, allProjects, onSave, onBack 
         {/* Available projects */}
         {availableProjects.length > 0 && (
           <div className="bg-white rounded-xl border border-slate-200 p-6">
-            <h2 className="text-sm font-semibold text-slate-900 mb-4">Hangtérképek hozzáadása</h2>
+            <h2 className="text-sm font-semibold text-slate-900 mb-4">Hangösvények hozzáadása</h2>
             <ul className="space-y-2">
               {availableProjects.map((p) => (
                 <li

@@ -36,7 +36,7 @@ export const TermsPage = ({ onBack }: Props) => {
           <div>
             <h2 className="text-lg font-semibold text-slate-900 mb-3">1. A szolgáltató adatai</h2>
             <p>
-              A Hangtérkép alkalmazást (a továbbiakban: „Szolgáltatás") a Csányi Alapítvány
+              A Hangösvény alkalmazást (a továbbiakban: „Szolgáltatás") a Csányi Alapítvány
               (a továbbiakban: „Szolgáltató") üzemelteti. Az Alapítvány célja a látássérült és
               gyengénlátó személyek digitális akadálymentességének előmozdítása.
             </p>
@@ -45,7 +45,7 @@ export const TermsPage = ({ onBack }: Props) => {
           <div>
             <h2 className="text-lg font-semibold text-slate-900 mb-3">2. A Szolgáltatás tárgya</h2>
             <p>
-              A Hangtérkép egy interaktív webalkalmazás, amely lehetővé teszi, hogy a felhasználók
+              A Hangösvény egy interaktív webalkalmazás, amely lehetővé teszi, hogy a felhasználók
               képekhez hangos leírásokat, narációkat és hangzónákat rendeljenek hozzá. A Szolgáltatás
               célja a vizuális tartalmak hangalapú megközelíthetővé tétele látássérült személyek
               számára.
@@ -70,7 +70,7 @@ export const TermsPage = ({ onBack }: Props) => {
             <h2 className="text-lg font-semibold text-slate-900 mb-3">4. A felhasználó jogai és kötelezettségei</h2>
             <p>A felhasználó jogosult:</p>
             <ul className="list-disc list-inside mt-2 space-y-1">
-              <li>hangtérkép projektek létrehozására, szerkesztésére és törlésére;</li>
+              <li>hangösvény projektek létrehozására, szerkesztésére és törlésére;</li>
               <li>projektjeit nyilvánossá tenni a közösségi galériában;</li>
               <li>más felhasználók nyilvános projektjeit megtekinteni és meghallgatni.</li>
             </ul>

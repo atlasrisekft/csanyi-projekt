@@ -215,7 +215,7 @@ export const AuthView = ({ onLoginSuccess, onBack }: { onLoginSuccess: () => voi
             <main id="main-content" role="main" className="flex-1 flex items-center justify-center p-4">
             <Card className="w-full max-w-md">
                 <CardHeader className="text-center">
-                    <CardTitle className="text-2xl font-bold text-indigo-600">Hangtérkép</CardTitle>
+                    <CardTitle className="text-2xl font-bold text-indigo-600">Hangösvény</CardTitle>
                     <CardDescription className="my-1 mb-4">Jelentkezz be a hangprojektjeid kezeléséhez</CardDescription>
                 </CardHeader>
                 <CardContent>
