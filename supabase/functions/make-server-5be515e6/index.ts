@@ -303,6 +303,12 @@ app.get("/public/project-by-id", async (c) => {
     p.hotspots = await Promise.all(
       (p.hotspots || []).map(async (h: any) => {
         if (h.audioPath) h.audioUrl = await sign(h.audioPath);
+        h.sounds = await Promise.all(
+          (h.sounds || []).map(async (s: any) => ({
+            ...s,
+            audioUrl: await sign(s.audioPath),
+          })),
+        );
         return h;
       }),
     );
@@ -667,6 +673,12 @@ app.get("/public/project", async (c) => {
     p.hotspots = await Promise.all(
       (p.hotspots || []).map(async (h: any) => {
         if (h.audioPath) h.audioUrl = await sign(h.audioPath);
+        h.sounds = await Promise.all(
+          (h.sounds || []).map(async (s: any) => ({
+            ...s,
+            audioUrl: await sign(s.audioPath),
+          })),
+        );
         return h;
       }),
     );

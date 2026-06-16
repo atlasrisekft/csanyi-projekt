@@ -104,7 +104,7 @@ export const RootGalleryView = ({
         </div>
       </section>
 
-      <main id="main-content" role="main" className="max-w-6xl mx-auto p-8">
+      <main id="main-content" role="main" className="w-full max-w-6xl mx-auto px-9 sm:px-8 py-8">
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-slate-900">Közösségi galéria</h1>
           <p className="text-slate-500 text-sm mt-1">
