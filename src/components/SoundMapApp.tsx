@@ -1606,6 +1606,10 @@ const TOUR_STEPS: TourStep[] = [
 
 export const SoundMapApp = () => {
   const [session, setSession] = useState<any>(null);
+  const [isRecoveryMode, setIsRecoveryMode] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return window.location.hash.includes("type=recovery");
+  });
   const [view, setView] = useState<ViewMode>("gallery");
   const [projects, setProjects] = useState<Project[]>([]);
   const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
@@ -2201,8 +2205,22 @@ export const SoundMapApp = () => {
     );
   }
 
-  if (!session) {
-    return <AuthView onLoginSuccess={() => {}} onBack={() => setIsRootGalleryView(true)} />;
+  if (!session || isRecoveryMode) {
+    return (
+      <AuthView
+        onLoginSuccess={() => {
+          if (isRecoveryMode) {
+            window.history.replaceState(
+              null,
+              "",
+              window.location.pathname + window.location.search,
+            );
+            setIsRecoveryMode(false);
+          }
+        }}
+        onBack={() => setIsRootGalleryView(true)}
+      />
+    );
   }
 
   if (view === "profile") {
