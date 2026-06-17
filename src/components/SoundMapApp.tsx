@@ -2143,6 +2143,22 @@ export const SoundMapApp = () => {
     }
   };
 
+  if (isRecoveryMode) {
+    return (
+      <AuthView
+        onLoginSuccess={() => {
+          window.history.replaceState(
+            null,
+            "",
+            window.location.pathname + window.location.search,
+          );
+          setIsRecoveryMode(false);
+        }}
+        onBack={() => setIsRootGalleryView(true)}
+      />
+    );
+  }
+
   if (isSharedView) {
     if (sharedError)
       return (
@@ -2205,22 +2221,8 @@ export const SoundMapApp = () => {
     );
   }
 
-  if (!session || isRecoveryMode) {
-    return (
-      <AuthView
-        onLoginSuccess={() => {
-          if (isRecoveryMode) {
-            window.history.replaceState(
-              null,
-              "",
-              window.location.pathname + window.location.search,
-            );
-            setIsRecoveryMode(false);
-          }
-        }}
-        onBack={() => setIsRootGalleryView(true)}
-      />
-    );
+  if (!session) {
+    return <AuthView onLoginSuccess={() => {}} onBack={() => setIsRootGalleryView(true)} />;
   }
 
   if (view === "profile") {
