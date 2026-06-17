@@ -80,14 +80,15 @@ export const AppHeader = ({ children, onBrandClick, description }: AppHeaderProp
               {brandContent}
             </button>
           ) : (
-            <a
-              href="#main-content"
+            <button
+              type="button"
+              onClick={onBrandClick}
               aria-label={`Hangösvény — ${tagline}`}
-              className="flex items-center gap-2 min-w-0"
-              style={{ textDecoration: 'none', color: 'inherit' }}
+              className="flex items-center gap-3 min-w-0 cursor-pointer"
+              style={{ background: 'none', border: 'none', padding: 0, color: 'inherit', textAlign: 'left' }}
             >
               {brandContent}
-            </a>
+            </button>
           )}
 
           {children && (
